@@ -222,7 +222,7 @@ public class ObjectDetector {
      */
     private double getDistanceFromCamera() {
         int pixelWidth = (maxY - minY);
-        return Field.RING_WIDTH/Field.MM_PER_INCH * OpenCVWebcam.FOCAL_LENGTH / pixelWidth;
+        return 1/Field.MM_PER_INCH * OpenCVWebcam.FOCAL_LENGTH / pixelWidth;
     }
 
     /** Returns the x position of the object in pixels

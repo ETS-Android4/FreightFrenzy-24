@@ -15,7 +15,6 @@ public class WaitOperation extends Operation {
     private long time;
 
     public WaitOperation(long time, String title) {
-        this.type = TYPE.WAIT_TIME;
         this.time = time;
         this.title = title;
     }
@@ -27,5 +26,15 @@ public class WaitOperation extends Operation {
 
     public boolean isComplete() {
         return new Date().getTime() - getStartTime().getTime() > time;
+    }
+
+    @Override
+    public void startOperation() {
+
+    }
+
+    @Override
+    public void abortOperation() {
+
     }
 }
