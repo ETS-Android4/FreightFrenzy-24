@@ -6,7 +6,6 @@ import com.acmerobotics.roadrunner.trajectory.Trajectory;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.teamcode.game.Match;
 import org.firstinspires.ftc.teamcode.robot.components.drivetrain.MecanumDriveTrain;
-import org.firstinspires.ftc.teamcode.robot.components.vision.VslamCamera;
 
 import java.util.Locale;
 
@@ -18,21 +17,17 @@ public class FollowTrajectory extends Operation {
     public static final int DEFAULT_CORRECTION_COUNT = 1;
 
     protected Trajectory trajectory;
+    MecanumDriveTrain driveTrain;
     protected int correctionCount = DEFAULT_CORRECTION_COUNT, retries;
 
-    public FollowTrajectory(String title) {
-        this.type = TYPE.FOLLOW_TRAJECTORY;
-        this.title = title;
-    }
-
-    public FollowTrajectory(Trajectory trajectory, int retries, String title) {
-        this(trajectory, title);
+    public FollowTrajectory(Trajectory trajectory, MecanumDriveTrain driveTrain, int retries, String title) {
+        this(trajectory, driveTrain, title);
         this.correctionCount = retries;
     }
 
-    public FollowTrajectory(Trajectory trajectory, String title) {
-        this.type = TYPE.FOLLOW_TRAJECTORY;
+    public FollowTrajectory(Trajectory trajectory, MecanumDriveTrain driveTrain, String title) {
         this.trajectory = trajectory;
+        this.driveTrain = driveTrain;
         this.title = title;
     }
     public void setTrajectory(Trajectory trajectory) {
@@ -50,7 +45,7 @@ public class FollowTrajectory extends Operation {
                 this.title);
     }
 
-    public boolean isComplete(MecanumDriveTrain driveTrain, VslamCamera camera) {
+    public boolean isComplete() {
         driveTrain.update();
         //Match.log("Trajectory position: " + driveTrain.getPoseEstimate().toString());
         boolean busy = driveTrain.isBusy();
@@ -58,7 +53,6 @@ public class FollowTrajectory extends Operation {
             driveTrain.update();
             Pose2d currentPose = driveTrain.getPoseEstimate();
             String error = getError(currentPose, trajectory, retries);
-            camera.setLastError(error);
             if (retries++ < correctionCount && (Math.abs(trajectory.end().getX()-currentPose.getX()) > MecanumDriveTrain.ACCEPTABLE_ERROR
                 || Math.abs(trajectory.end().getY()-currentPose.getY())  > MecanumDriveTrain.ACCEPTABLE_ERROR))
             {
@@ -75,6 +69,16 @@ public class FollowTrajectory extends Operation {
                     currentPose.toString()));
          }
         return !busy;
+    }
+
+    @Override
+    public void startOperation() {
+        this.driveTrain.handleOperation(this);
+    }
+
+    @Override
+    public void abortOperation() {
+        this.driveTrain.stop();
     }
 
     public static String getError(Pose2d currentPose, Trajectory trajectory, int retries) {

@@ -27,7 +27,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package org.firstinspires.ftc.teamcode.drivercontrolled;
+package org.firstinspires.ftc.teamcode.opmodes.drivercontrolled;
 
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
@@ -35,7 +35,6 @@ import com.qualcomm.robotcore.util.RobotLog;
 
 import org.firstinspires.ftc.teamcode.game.Match;
 import org.firstinspires.ftc.teamcode.robot.Robot;
-import org.firstinspires.ftc.teamcode.robot.operations.PickerOperation;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
@@ -75,7 +74,6 @@ public class DriverControlledOperation extends OpMode {
         this.match = Match.getInstance();
         match.setTeleopStartTime(new Date());
         robot.reset();
-        robot.setShooterPIDF();
 
         try {
             robot.setState("Initialized");
@@ -124,10 +122,6 @@ public class DriverControlledOperation extends OpMode {
 
     @Override
     public void start() {
-        robot.turnIntakeOn();
-        robot.queueTertiaryOperation(new PickerOperation(PickerOperation.PickerOperationType.COMPACT, "Vertical"));
-        robot.queueTertiaryOperation(new PickerOperation(PickerOperation.PickerOperationType.CLOSE_GRIPPER, "Close Gripper"));
-
     }
 
     /*

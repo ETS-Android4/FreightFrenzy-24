@@ -116,9 +116,12 @@ public class MecanumDriveTrain extends PhoebeRoadRunnerDrive {
                         .build();
                 Match.log("Starting " + operation.getTitle() + ": " + trajectory.start() + "->" + trajectory.end()
                         + " at " + currentPose + ", build took " + (new Date().getTime() - start.getTime()) + " mSecs");
+                //set trajectory in operation
                 operation.setTrajectory(trajectory);
+                //start following trajectory
                 super.followTrajectoryAsync(trajectory);
-                operation.setTrajectoryBeingFollowed(true);
+                //mark that trajectory has been started
+                operation.setTrajectoryStarted(true);
             });
             createTrajectoryThread.start();
         }

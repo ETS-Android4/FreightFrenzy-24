@@ -12,11 +12,12 @@ import java.util.Locale;
 public class BearingOperation extends Operation {
     public static final double MIN_SPEED = 0.1;
     protected double desiredBearing;
+    private MecanumDriveTrain driveTrain;
 
-    public BearingOperation(double desiredBearing, String title) {
-        this.type = TYPE.BEARING;
+    public BearingOperation(double desiredBearing, MecanumDriveTrain driveTrain, String title) {
         this.title = title;
         this.desiredBearing = desiredBearing;
+        this.driveTrain = driveTrain;
     }
 
     public String toString() {
@@ -24,9 +25,11 @@ public class BearingOperation extends Operation {
                 this.desiredBearing, this.title);
     }
 
-    public boolean isComplete(MecanumDriveTrain driveTrain, double currentBearing) {
+    @Override
+    public boolean isComplete() {
         // determine turn power based on +/- error
-        double error = AngleUnit.normalizeDegrees(desiredBearing - currentBearing);
+        double currentBearing = driveTrain.getExternalHeading();
+        double error = AngleUnit.normalizeDegrees(desiredBearing - Math.toDegrees(currentBearing));
 
         if (Math.abs(error) <= MecanumDriveTrain.HEADING_THRESHOLD) {
             driveTrain.stop();
@@ -46,27 +49,13 @@ public class BearingOperation extends Operation {
         }
     }
 
-    /*
-    public boolean isComplete(MecanumDriveTrain driveTrain) {
-        // determine turn power based on +/- error
-        double currentBearing = driveTrain.getIMU().getRawBearing();
-        double error = AngleUnit.normalizeDegrees(degrees - currentBearing);
-
-        if (Math.abs(error) <= MecanumDriveTrain.HEADING_THRESHOLD) {
-            driveTrain.stop();
-            Match.log("Done with error: " + error);
-            return true;
-        }
-        else {
-            pidController.setInput(error/180);
-            double rotation = pidController.performPID();
-            driveTrain.drive(0, 0, rotation, false);
-            Match.log(String.format(Locale.getDefault(),
-                    "Gyroscopic bearing rotation: %.2f, error: %.2f",
-                    rotation, error));
-            return false;
-        }
+    @Override
+    public void startOperation() {
+        this.driveTrain.handleOperation(this);
     }
 
-     */
+    @Override
+    public void abortOperation() {
+        this.driveTrain.stop();
+    }
 }

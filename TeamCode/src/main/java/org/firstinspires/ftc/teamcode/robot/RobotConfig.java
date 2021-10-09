@@ -1,24 +1,8 @@
 package org.firstinspires.ftc.teamcode.robot;
 
+import org.firstinspires.ftc.teamcode.game.Field;
+
 public class RobotConfig {
-    //shooter motors and servos
-    public static final String SHOOTER_MOTOR = "shooterMotor";
-    public static final String SHOOTER_TRIGGER_SERVO = "shooterTriggerServo";
-    public static final String SHOOTER_ANGLE_SERVO = "shooterAngleServo";
-    public static final double SHOOTER_SPEED_INCREMENT = 0.005;
-
-    //intake motors and servos
-    public static final String PLATFORM_SERVO = "platformServo";
-    public static final String INTAKE_SERVO = "intakeServo";
-    public static final String INTAKE_MOTOR = "intakeMotor";
-    public static final double INTAKE_MOTOR_SPEED = 1;
-    public static final double INTAKE_SPEED_INCREMENT = 0.01;
-
-    //picker arm motors and servos
-    public static final String GRIPPER_SERVO = "gripperServo";
-    public static final String WINCH_MOTOR = "winchMotor";
-    public static final String SHOULDER_MOTOR = "shoulderMotor";
-
     //drive train motors
     public static final String LEFT_FRONT_DRIVE = "leftFrontDrive";
     public static final String LEFT_REAR_DRIVE = "leftRearDrive";
@@ -30,4 +14,9 @@ public class RobotConfig {
 
     //webcam id
     public static final String WEBCAM_ID = "Webcam 1";
+    public static final double WIDTH = 17.5* Field.MM_PER_INCH;
+    public static final double ALLOWED_BEARING_ERROR = Math.toRadians(0.5);
+    public static final double ALLOWED_POSITIONAL_ERROR = .25;
+    public static final double SUPER_CAUTIOUS_SPEED = 0.2;
+    public static final double REGULAR_SPEED = 0.6;
 }

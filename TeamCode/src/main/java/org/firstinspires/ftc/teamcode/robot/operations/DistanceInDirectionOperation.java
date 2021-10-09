@@ -15,14 +15,15 @@ public class DistanceInDirectionOperation extends DistanceOperation {
     private double distance;
     private double speed;
     double direction;
+    MecanumDriveTrain driveTrain;
 
     public DistanceInDirectionOperation(double travelDistance, double heading,
-                                        double speed, String title) {
-        super(travelDistance, travelDistance, title);
+                                        double speed, MecanumDriveTrain driveTrain, String title) {
+        super(travelDistance, travelDistance, driveTrain, title);
         this.distance = travelDistance;
         this.speed = speed;
-        this.type = TYPE.DRIVE_IN_DIRECTION;
         this.direction = heading;
+        this.driveTrain = driveTrain;
         this.title = title;
     }
 
@@ -32,8 +33,8 @@ public class DistanceInDirectionOperation extends DistanceOperation {
                 this.title);
     }
 
-
-    public boolean isComplete(MecanumDriveTrain driveTrain, double currentBearing) {
+    public boolean isComplete() {
+        double currentBearing = Math.toDegrees(driveTrain.getExternalHeading());
         if (driveTrain.driveTrainWithinRange()) {
             driveTrain.stop();
             return true;

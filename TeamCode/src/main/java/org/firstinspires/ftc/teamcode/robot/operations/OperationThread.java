@@ -38,7 +38,7 @@ public class OperationThread extends Thread {
                                     + " in " + (new Date().getTime() - operation.getStartTime().getTime())
                                     + " mSecs");
                         }
-                        else if (robot.operationCompleted(operation)) {
+                        else if (operation.isComplete()) {
                             this.operationsQueue.remove(0);
                             Match.log(title + ": Completed operation: " + operation.toString()
                                     + " at " + Match.getInstance().getElapsed()
@@ -52,7 +52,7 @@ public class OperationThread extends Thread {
                     if (!operation.getOperationIsBeingProcessed()) {
                         Match.log(title + ": Starting operation: " + operation.toString());
                         operation.setOperationBeingProcessed();
-                        robot.executeOperation(operation);
+                        operation.startOperation();
                     }
                 }
             }
@@ -73,7 +73,7 @@ public class OperationThread extends Thread {
                 Operation operation = this.operationsQueue.get(0);
                 if (operation.getOperationIsBeingProcessed()) {
                     Match.log(title + ": Aborting operation: " + operation.getTitle());
-                    robot.abortOperation(operation);
+                    operation.abortOperation();
                     operation.setAborted(true);
                 }
             }

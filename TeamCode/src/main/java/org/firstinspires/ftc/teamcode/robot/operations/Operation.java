@@ -15,7 +15,7 @@ public abstract class Operation {
         DRIVE_FOR_TIME, DRIVE_FOR_DISTANCE, DRIVE_IN_DIRECTION, DRIVE_TO_POSITION,
         STRAFE_LEFT_FOR_DISTANCE, STRAFE_LEFT_FOR_DISTANCE_WITH_HEADING, ROTATION,
         WAIT_TIME, BEARING,
-        CAMERA, PICKER_OPERATION, TURN, FOLLOW_TRAJECTORY, SHOOTER, INTAKE
+        CAMERA, TURN, FOLLOW_TRAJECTORY
     }
     protected boolean operationIsBeingProcessed = false;
 
@@ -30,13 +30,9 @@ public abstract class Operation {
     protected boolean isAborted = false;
 
     private Date startTime;
-    TYPE type;
     String title;
     public String getTitle() {
         return title;
-    }
-    public TYPE getType() {
-        return this.type;
     }
     public boolean getOperationIsBeingProcessed() {
         return this.operationIsBeingProcessed;
@@ -50,4 +46,8 @@ public abstract class Operation {
     public Date getStartTime() {
         return this.startTime;
     }
+
+    public abstract boolean isComplete();
+    public abstract void startOperation();
+    public abstract void abortOperation();
 }

@@ -1,9 +1,9 @@
 package org.firstinspires.ftc.teamcode.robot.operations;
 
 import com.acmerobotics.roadrunner.geometry.Pose2d;
+import com.acmerobotics.roadrunner.trajectory.Trajectory;
 
 import org.firstinspires.ftc.teamcode.robot.components.drivetrain.MecanumDriveTrain;
-import org.firstinspires.ftc.teamcode.robot.components.vision.VslamCamera;
 
 import java.util.Locale;
 
@@ -13,25 +13,24 @@ import java.util.Locale;
 
 public class DriveToPositionOperation extends FollowTrajectory {
     private Pose2d desiredPose;
-    private boolean trajectoryBeingFollowed;
+    private boolean trajectoryStarted;
+    MecanumDriveTrain driveTrain;
 
 
-    public boolean isTrajectoryBeingFollowed() {
-        return trajectoryBeingFollowed;
+    public boolean isTrajectoryStarted() {
+        return trajectoryStarted;
     }
 
-    public void setTrajectoryBeingFollowed(boolean trajectoryBeingFollowed) {
-        this.trajectoryBeingFollowed = trajectoryBeingFollowed;
+    public void setTrajectory (Trajectory trajectory) {
+        this.trajectory = trajectory;
+    }
+    public void setTrajectoryStarted(boolean trajectoryStarted) {
+        this.trajectoryStarted = trajectoryStarted;
     }
 
-    public DriveToPositionOperation(Pose2d desiredPose, int correctionCount, String title) {
-        this(desiredPose, title);
-        this.correctionCount = correctionCount;
-    }
-    public DriveToPositionOperation(Pose2d desiredPose, String title) {
-        super(title);
+    public DriveToPositionOperation(Pose2d desiredPose, MecanumDriveTrain driveTrain, String title) {
+        super(null, driveTrain, title);
         this.desiredPose = desiredPose;
-        this.type = TYPE.DRIVE_TO_POSITION;
         this.title = title;
     }
 
@@ -45,12 +44,23 @@ public class DriveToPositionOperation extends FollowTrajectory {
                 this.title);
     }
 
-    public boolean isComplete(MecanumDriveTrain driveTrain, VslamCamera camera) {
+    public boolean isComplete() {
         //wait for the trajectory to be created
-        if (!trajectoryBeingFollowed) {
+        if (!trajectoryStarted) {
             return false;
         }
-        return super.isComplete(driveTrain, camera);
+        return super.isComplete();
     }
+
+    @Override
+    public void startOperation() {
+        driveTrain.handleOperation(this);
+    }
+
+    @Override
+    public void abortOperation() {
+        driveTrain.stop();
+    }
+
 }
 

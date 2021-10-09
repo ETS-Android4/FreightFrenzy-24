@@ -40,16 +40,6 @@ public class VslamCamera implements Localizer, Consumer<T265Camera.CameraUpdate>
     private volatile boolean isInitialized = false;
     private Pose2d startingPose;
 
-    public String getLastError() {
-        return lastError;
-    }
-
-    public void setLastError(String lastError) {
-        this.lastError = lastError;
-    }
-
-    private String lastError = "";
-
     public VslamCamera(HardwareMap hardwareMap) {
         Thread cameraInitializationThread = new Thread(() -> {
             synchronized (synchronizationObject) {

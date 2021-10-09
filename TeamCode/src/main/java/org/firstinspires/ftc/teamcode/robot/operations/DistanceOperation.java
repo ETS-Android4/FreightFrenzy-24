@@ -12,11 +12,12 @@ import java.util.Locale;
 public class DistanceOperation extends Operation {
     private double distance;
     private double speed;
+    MecanumDriveTrain driveTrain;
 
-    public DistanceOperation(double distance, double speed, String title) {
+    public DistanceOperation(double distance, double speed, MecanumDriveTrain driveTrain, String title) {
         this.distance = distance;
         this.speed = speed;
-        this.type = TYPE.DRIVE_FOR_DISTANCE;
+        this.driveTrain = driveTrain;
         this.title = title;
     }
 
@@ -26,7 +27,7 @@ public class DistanceOperation extends Operation {
                 this.title);
     }
 
-    public boolean isComplete(MecanumDriveTrain driveTrain) {
+    public boolean isComplete() {
         if (driveTrain.driveTrainWithinRange()) {
             driveTrain.stop();
             return true;
@@ -40,6 +41,16 @@ public class DistanceOperation extends Operation {
 
     public double getDistance() {
         return this.distance;
+    }
+
+    @Override
+    public void startOperation() {
+        driveTrain.handleOperation(this);
+    }
+
+    @Override
+    public void abortOperation() {
+        driveTrain.stop();
     }
 }
 

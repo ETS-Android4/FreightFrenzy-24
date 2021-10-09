@@ -29,7 +29,6 @@ import com.qualcomm.robotcore.hardware.Servo;
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
-import org.firstinspires.ftc.teamcode.game.Field;
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfPoint;
 import org.opencv.core.Rect;
@@ -118,11 +117,6 @@ public class OpenCVWebcam {
         });
     }
 
-    public Field.RingCount getNumberOfRings() {
-        synchronized (synchronizer) {
-            return pipeline.ringCount;
-        }
-    }
 
     /**
      * Return the road runner pose of the object seen relative to the robot.
@@ -131,10 +125,6 @@ public class OpenCVWebcam {
      * @return
      */
     public Pose2d getRelativeRingPosition() {
-        if (seeingRing()) {
-            return new Pose2d(pipeline.objectDetector.getXPosition(),
-                    pipeline.objectDetector.getYPosition(), pipeline.objectDetector.getAngleFromCamera());
-        }
         return null;
     }
 
@@ -231,9 +221,6 @@ public class OpenCVWebcam {
         return pipeline.objectDetector.getMean();
     }
 
-    public boolean seeingRing() {
-        return getNumberOfRings() == Field.RingCount.FOUR || getNumberOfRings() == Field.RingCount.ONE;
-    }
     public Object getWidth() {
         return getMaxY() - getMinY();
     }
@@ -256,9 +243,6 @@ public class OpenCVWebcam {
 
         public ObjectDetector objectDetector = new ObjectDetector(colorMin, colorMax,
                 0, 480, 0, 1700);
-        // Volatile since accessed by OpMode thread w/o synchronization
-        private volatile Field.RingCount ringCount = Field.RingCount.UNKNOWN;
-        private volatile double ringRatio;
 
         @Override
         public Mat processFrame(Mat input) {
@@ -273,17 +257,6 @@ public class OpenCVWebcam {
                 Imgproc.rectangle(input, limitsRectangle, RED, 6);
 
                 synchronized (synchronizer) {
-                    if (objectDetector.getLargestArea() > 0) {
-                        ringRatio = objectDetector.getHeightWidthRatio();
-                        if (ringRatio > ObjectDetector.FOUR_RING_RATIO_THRESHOLD) {
-                            ringCount = Field.RingCount.FOUR;
-                        } else  {
-                            ringCount = Field.RingCount.ONE;
-                        }
-                    }
-                    else {
-                        ringCount = Field.RingCount.NONE;
-                    }
                 }
                 return input;
             }

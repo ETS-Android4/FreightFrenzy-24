@@ -28,8 +28,7 @@ public class Match {
     private FtcDashboard dashboard = FtcDashboard.getInstance();
     private Date startTime = new Date();
     private Date teleopStartTime = new Date();
-    private Field.RingCount numberOfRings;
-    private Alliance.Color allianceColor;
+    private Alliance.Color alliance;
 
     private Field.StartingPosition startingPosition;
 
@@ -106,14 +105,10 @@ public class Match {
 
         if (robot != null && field != null) {
             // Send telemetry message to signify robot context;
-            telemetry.addData("State:", status + ", rings: " + getNumberOfRings());
-            telemetry.addData("Shooter", robot.getShooterStatus());
-            telemetry.addData("Intake", robot.getIntakeStatus());
+            telemetry.addData("State:", status);
             if (showPosition) {
                 telemetry.addData("Position", robot.getPosition());
             }
-            telemetry.addData("TrajectoryError", robot.getLastTrajectoryError());
-            telemetry.addData("Arm", robot.getPickerArmStatus());
             updateDashBoard();
         }
         else {
@@ -122,19 +117,12 @@ public class Match {
         telemetry.update();
     }
 
-    public void setAlliance(Alliance.Color allianceColor) {
-        this.allianceColor = allianceColor;
+    public void setAlliance(Alliance.Color alliance) {
+        this.alliance = alliance;
     }
 
-    public Alliance.Color getAllianceColor() {
-        return allianceColor;
-    }
-
-    public Field.RingCount getNumberOfRings() {
-        return numberOfRings == null ? Field.RingCount.UNKNOWN : numberOfRings;
-    }
-    public void setNumberOfRings(Field.RingCount numberOfRings) {
-        this.numberOfRings = numberOfRings;
+    public Alliance.Color getAlliance() {
+        return alliance;
     }
 
     public Field.StartingPosition getStartingPosition() {

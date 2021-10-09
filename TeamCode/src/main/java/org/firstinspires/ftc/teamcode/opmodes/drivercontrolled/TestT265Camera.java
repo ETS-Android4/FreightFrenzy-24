@@ -1,4 +1,4 @@
-package org.firstinspires.ftc.teamcode.drivercontrolled;
+package org.firstinspires.ftc.teamcode.opmodes.drivercontrolled;
 
 import com.acmerobotics.dashboard.FtcDashboard;
 import com.acmerobotics.dashboard.canvas.Canvas;

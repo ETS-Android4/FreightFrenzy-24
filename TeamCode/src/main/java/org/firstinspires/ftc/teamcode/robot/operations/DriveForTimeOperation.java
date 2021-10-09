@@ -13,6 +13,7 @@ public class DriveForTimeOperation extends Operation {
     private long time;
     private double desiredHeading;
     private double speed;
+    private MecanumDriveTrain driveTrain;
 
     public void setSpeed(double speed) {
         this.speed = speed;
@@ -22,11 +23,11 @@ public class DriveForTimeOperation extends Operation {
         return time;
     }
 
-    public DriveForTimeOperation(long time, double heading, double speed, String title) {
+    public DriveForTimeOperation(long time, double heading, double speed, MecanumDriveTrain driveTrain, String title) {
         this.time = time;
-        this.type = TYPE.DRIVE_FOR_TIME;
         this.desiredHeading = heading;
         this.speed = speed;
+        this.driveTrain = driveTrain;
         this.title = title;
     }
 
@@ -36,7 +37,7 @@ public class DriveForTimeOperation extends Operation {
                 this.title);
     }
 
-    public boolean isComplete(MecanumDriveTrain driveTrain) {
+    public boolean isComplete() {
         if (new Date().getTime() > (this.getStartTime().getTime() + getTime())) {
             driveTrain.stop();
             return true;
@@ -48,6 +49,16 @@ public class DriveForTimeOperation extends Operation {
 
     public double getSpeed() {
         return this.speed;
+    }
+
+    @Override
+    public void startOperation() {
+
+    }
+
+    @Override
+    public void abortOperation() {
+
     }
 }
 

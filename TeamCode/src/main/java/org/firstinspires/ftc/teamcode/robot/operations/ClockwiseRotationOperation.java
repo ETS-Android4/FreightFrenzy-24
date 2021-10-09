@@ -11,11 +11,12 @@ import java.util.Locale;
 public class ClockwiseRotationOperation extends Operation {
     private double degrees;
     private double speed;
+    MecanumDriveTrain driveTrain;
 
-    public ClockwiseRotationOperation(double degrees, double speed, String title) {
+    public ClockwiseRotationOperation(double degrees, double speed, MecanumDriveTrain driveTrain, String title) {
         this.degrees = degrees;
         this.speed = speed;
-        this.type = TYPE.ROTATION;
+        this.driveTrain = driveTrain;
         this.title = title;
     }
 
@@ -25,7 +26,16 @@ public class ClockwiseRotationOperation extends Operation {
                 this.title);
     }
 
-    public boolean isComplete(MecanumDriveTrain driveTrain) {
+    public double getSpeed() {
+        return this.speed;
+    }
+
+    public double getDegrees() {
+        return this.degrees;
+    }
+
+    @Override
+    public boolean isComplete() {
         if (driveTrain.driveTrainWithinRange()) {
             driveTrain.stop();
             return true;
@@ -33,12 +43,14 @@ public class ClockwiseRotationOperation extends Operation {
         return false;
     }
 
-    public double getSpeed() {
-        return this.speed;
+    @Override
+    public void startOperation() {
+        driveTrain.handleOperation(this);
     }
 
-    public double getDegrees() {
-        return this.degrees;
+    @Override
+    public void abortOperation() {
+        driveTrain.stop();
     }
 }
 

@@ -15,12 +15,13 @@ public class StrafeLeftForDistanceWithHeadingOperation extends Operation {
     private double distance;
     private double speed;
     private double heading;
+    MecanumDriveTrain driveTrain;
 
-    public StrafeLeftForDistanceWithHeadingOperation(double distance, double heading, double speed, String title) {
+    public StrafeLeftForDistanceWithHeadingOperation(double distance, double heading, double speed, MecanumDriveTrain driveTrain, String title) {
         this.distance = distance;
         this.heading = heading;
         this.speed = speed;
-        this.type = TYPE.STRAFE_LEFT_FOR_DISTANCE_WITH_HEADING;
+        this.driveTrain = driveTrain;
         this.title = title;
     }
 
@@ -31,14 +32,14 @@ public class StrafeLeftForDistanceWithHeadingOperation extends Operation {
                 this.title);
     }
 
-    public boolean isComplete(MecanumDriveTrain driveTrain, double currentBearing) {
+    public boolean isComplete() {
         if (driveTrain.driveTrainWithinRange()) {
             driveTrain.stop();
             return true;
         }
         else {
             // adjust relative SPEED based on desiredHeading error.
-            double bearingError = AngleUnit.normalizeDegrees(heading - currentBearing);
+            double bearingError = AngleUnit.normalizeDegrees(heading - Math.toDegrees(driveTrain.getExternalHeading()));
             double steer = MecanumDriveTrain.getSteer(bearingError, MecanumDriveTrain.P_DRIVE_COEFF);
 
             // if driving in reverse, the motor correction also needs to be reversed
@@ -71,6 +72,16 @@ public class StrafeLeftForDistanceWithHeadingOperation extends Operation {
 
     public double getDistance() {
         return this.distance;
+    }
+
+    @Override
+    public void startOperation() {
+        driveTrain.handleOperation(this);
+    }
+
+    @Override
+    public void abortOperation() {
+        driveTrain.stop();
     }
 }
 

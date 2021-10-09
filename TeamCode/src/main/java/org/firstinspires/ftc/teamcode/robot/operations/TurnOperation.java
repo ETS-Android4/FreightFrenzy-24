@@ -1,6 +1,5 @@
 package org.firstinspires.ftc.teamcode.robot.operations;
 
-import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.teamcode.robot.components.drivetrain.MecanumDriveTrain;
 
 import java.util.Locale;
@@ -42,13 +41,14 @@ public class TurnOperation extends Operation {
     protected double degrees;
     private double speed;
     private Direction direction;
+    MecanumDriveTrain driveTrain;
 
-    public TurnOperation(double degrees, double speed, Direction direction, String title) {
-        this.type = TYPE.TURN;
+    public TurnOperation(double degrees, double speed, Direction direction, MecanumDriveTrain driveTrain, String title) {
         this.title = title;
         this.degrees = degrees;
         this.speed = speed;
         this.direction = direction;
+        this.driveTrain = driveTrain;
     }
 
     public String toString() {
@@ -56,12 +56,22 @@ public class TurnOperation extends Operation {
                 this.degrees, this.speed, this.direction, this.title);
     }
 
-    public boolean isComplete(MecanumDriveTrain driveTrain) {
+    public boolean isComplete() {
         if (direction == Direction.RIGHT) {
             return driveTrain.rightWithinRange();
         }
         else {
             return driveTrain.leftWithinRange();
         }
+    }
+
+    @Override
+    public void startOperation() {
+        driveTrain.handleOperation(this);
+    }
+
+    @Override
+    public void abortOperation() {
+        driveTrain.stop();
     }
 }

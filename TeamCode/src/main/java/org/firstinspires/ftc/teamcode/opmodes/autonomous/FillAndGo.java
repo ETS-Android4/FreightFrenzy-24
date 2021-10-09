@@ -1,4 +1,4 @@
-package org.firstinspires.ftc.teamcode.autonomous;
+package org.firstinspires.ftc.teamcode.opmodes.autonomous;
 
 import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
@@ -50,27 +50,27 @@ public class FillAndGo extends LinearOpMode {
                     double movementToApply = MOVEMENT_INCREMENT * multiplier;
 
                     if (gamepad1.dpad_up) {
-                        operations.add(new DistanceOperation(movementToApply, SPEED, "Move forward"));
+                        operations.add(new DistanceOperation(movementToApply, SPEED, robot.getDriveTrain(), "Move forward"));
                         if (gamepad1.right_trigger > 0) {
-                            robot.queuePrimaryOperation(new DistanceOperation(movementToApply, SPEED, "Move forward"));
+                            robot.queuePrimaryOperation(new DistanceOperation(movementToApply, SPEED, robot.getDriveTrain(), "Move forward"));
                         }
                         lastRecorded = new Date();
                     } else if (gamepad1.dpad_down) {
-                        operations.add(new DistanceOperation(-movementToApply, SPEED, "Move backward"));
+                        operations.add(new DistanceOperation(-movementToApply, SPEED, robot.getDriveTrain(), "Move backward"));
                         if (gamepad1.right_trigger > 0) {
-                            robot.queuePrimaryOperation(new DistanceOperation(-movementToApply, SPEED, "Move backward"));
+                            robot.queuePrimaryOperation(new DistanceOperation(-movementToApply, SPEED, robot.getDriveTrain(), "Move backward"));
                         }
                         lastRecorded = new Date();
                     } else if (gamepad1.dpad_left) {
-                        operations.add(new StrafeLeftForDistanceOperation(movementToApply, SPEED, "Move left"));
+                        operations.add(new StrafeLeftForDistanceOperation(movementToApply, SPEED, robot.getDriveTrain(),"Move left"));
                         if (gamepad1.right_trigger > 0) {
-                            robot.queuePrimaryOperation(new StrafeLeftForDistanceOperation(movementToApply, SPEED, "Move left"));
+                            robot.queuePrimaryOperation(new StrafeLeftForDistanceOperation(movementToApply, SPEED, robot.getDriveTrain(), "Move left"));
                         }
                         lastRecorded = new Date();
                     } else if (gamepad1.dpad_right) {
-                        operations.add(new StrafeLeftForDistanceOperation(-movementToApply, SPEED, "Move right"));
+                        operations.add(new StrafeLeftForDistanceOperation(-movementToApply, SPEED, robot.getDriveTrain(), "Move right"));
                         if (gamepad1.right_trigger > 0) {
-                            robot.queuePrimaryOperation(new StrafeLeftForDistanceOperation(-movementToApply, SPEED, "Move right"));
+                            robot.queuePrimaryOperation(new StrafeLeftForDistanceOperation(-movementToApply, SPEED, robot.getDriveTrain(), "Move right"));
                         }
                         lastRecorded = new Date();
                     }
