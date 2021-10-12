@@ -38,7 +38,7 @@ public class VslamCamera implements Localizer, Consumer<T265Camera.CameraUpdate>
                     new Rotation2d(Math.toRadians(T265_ROTATION)));
     private static final Object synchronizationObject = new Object();
     private volatile boolean isInitialized = false;
-    private Pose2d startingPose;
+    private Pose2d initialPose;
 
     public VslamCamera(HardwareMap hardwareMap) {
         Thread cameraInitializationThread = new Thread(() -> {
@@ -51,6 +51,7 @@ public class VslamCamera implements Localizer, Consumer<T265Camera.CameraUpdate>
                 isInitialized = true;
             }
         });
+        Match.log("Starting vslam thread");
         cameraInitializationThread.start();
     }
 
@@ -58,14 +59,9 @@ public class VslamCamera implements Localizer, Consumer<T265Camera.CameraUpdate>
      * Set robot starting position
      *
      */
-    public void setStartingPose() {
-        this.startingPose = Field.STARTING_POSE;
-        t265Camera.setPose(new com.arcrobotics.ftclib.geometry.Pose2d());
-    }
 
-
-    public void setStartingPose(Pose2d pose) {
-        this.startingPose = pose;
+    public void setInitialPose(Pose2d pose) {
+        this.initialPose = pose;
     }
 
     public boolean isInitialized() {
@@ -106,9 +102,9 @@ public class VslamCamera implements Localizer, Consumer<T265Camera.CameraUpdate>
         }
         try {
             //find current position in the coordinates and units of measure that roadrunner understands
-            double currentX = -cameraUpdate.pose.getTranslation().getX() / Field.M_PER_INCH + startingPose.getX();
-            double currentY = -cameraUpdate.pose.getTranslation().getY() / Field.M_PER_INCH + startingPose.getY();
-            double currentTheta = cameraUpdate.pose.getHeading() + Math.PI;
+            double currentX = -cameraUpdate.pose.getTranslation().getX() / Field.M_PER_INCH + initialPose.getX();
+            double currentY = -cameraUpdate.pose.getTranslation().getY() / Field.M_PER_INCH + initialPose.getY();
+            double currentTheta = cameraUpdate.pose.getHeading() + initialPose.getHeading();
 
             pose2dVelocity = new Pose2d(
                     (currentX - lastPose.getX()) / timeElapsed,
@@ -131,17 +127,20 @@ public class VslamCamera implements Localizer, Consumer<T265Camera.CameraUpdate>
     }
 
     public void stop() {
-        //Match.log("Stopping T265 camera");
+        Match.log("Stopping T265 camera");
         t265Camera.stop();
     }
     public void start() {
         try {//start our camera
-            //Match.log("Starting T265 camera");
+            Match.log("Starting T265 camera");
             t265Camera.start(this);
         } catch (Throwable e) {
             if (!"Camera is already started".equalsIgnoreCase(e.getMessage())) {
                 RobotLog.logStackTrace("SilverTitans: Error starting real sense", e);
                 throw e;
+            }
+            else {
+                Match.log("T265 Camera was already running");
             }
         }
     }

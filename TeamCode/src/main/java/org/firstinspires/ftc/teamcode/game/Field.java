@@ -29,12 +29,33 @@ public class Field {
     }
     public static final double ROBOT_STARTING_X =
             -(Field.FIELD_WIDTH/2 - MecanumDriveTrain.DRIVE_TRAIN_LENGTH/2 - 2*Field.MM_PER_INCH);
-    public static final Pose2d STARTING_POSE = new Pose2d(
-            ROBOT_STARTING_X/MM_PER_INCH,
-            -(Field.TILE_WIDTH*2 + Field.TAPE_WIDTH - RobotConfig.WIDTH/2)/MM_PER_INCH,
-            0);
+    public static final Pose2d[][] startingPoses = new Pose2d[Alliance.Color.values().length][StartingPosition.values().length];
+    {
+        startingPoses[Alliance.Color.RED.ordinal()][StartingPosition.LEFT.ordinal()] =
+                new Pose2d(
+                        (-Field.TILE_WIDTH - RobotConfig.WIDTH/2)/MM_PER_INCH,
+                        (-Field.FIELD_WIDTH/2+RobotConfig.LENGTH/2)/MM_PER_INCH,
+                        Math.toRadians(90));
+        startingPoses[Alliance.Color.RED.ordinal()][StartingPosition.RIGHT.ordinal()] =
+                new Pose2d(
+                        (RobotConfig.WIDTH/2)/MM_PER_INCH,
+                        (-Field.FIELD_WIDTH/2+RobotConfig.LENGTH)/2/MM_PER_INCH,
+                        Math.toRadians(90));
+        startingPoses[Alliance.Color.BLUE.ordinal()][StartingPosition.LEFT.ordinal()] =
+                new Pose2d(
+                        (RobotConfig.WIDTH/2)/MM_PER_INCH,
+                        (Field.FIELD_WIDTH/2-RobotConfig.LENGTH/2)/MM_PER_INCH,
+                        Math.toRadians(-90));
+        startingPoses[Alliance.Color.BLUE.ordinal()][StartingPosition.RIGHT.ordinal()] =
+                new Pose2d(
+                        (-Field.TILE_WIDTH - RobotConfig.WIDTH/2)/MM_PER_INCH,
+                        (Field.FIELD_WIDTH/2-RobotConfig.LENGTH/2)/MM_PER_INCH,
+                        Math.toRadians(-90));
+    }
+    private Pose2d startingPose;
 
-    public void init() {
+    public void init(Alliance.Color alliance, StartingPosition startingPosition) {
+        startingPose = startingPoses[alliance.ordinal()][startingPosition.ordinal()];
         Thread initThread = new Thread(() -> {
             RobotLog.i("SilverTitans: Field initialization started");
 /*
@@ -88,5 +109,9 @@ public class Field {
     public static Pose2d cameraToRoadRunnerPose(com.arcrobotics.ftclib.geometry.Pose2d pose) {
         return new Pose2d(pose.getTranslation().getX()/M_PER_INCH, pose.getTranslation().getY()/M_PER_INCH,
                 pose.getHeading()+Math.PI);
+    }
+
+    public Pose2d getStartingPose() {
+        return startingPose;
     }
 }

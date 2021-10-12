@@ -33,6 +33,7 @@ import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 import com.qualcomm.robotcore.hardware.VoltageSensor;
 import com.qualcomm.robotcore.hardware.configuration.typecontainers.MotorConfigurationType;
 
+import org.firstinspires.ftc.teamcode.game.Match;
 import org.firstinspires.ftc.teamcode.roadrunner.util.DashboardUtil;
 import org.firstinspires.ftc.teamcode.roadrunner.util.LynxModuleUtil;
 import org.firstinspires.ftc.teamcode.robot.RobotConfig;
@@ -80,8 +81,8 @@ public class PhoebeRoadRunnerDrive extends MecanumDrive {
     ));
 
     public void ensureWheelDirection() {
-        leftFront.setDirection(DcMotorSimple.Direction.REVERSE);
-        leftRear.setDirection(DcMotorSimple.Direction.REVERSE);
+        rightFront.setDirection(DcMotorSimple.Direction.REVERSE);
+        rightRear.setDirection(DcMotorSimple.Direction.REVERSE);
     }
 
     public enum Mode {
@@ -119,9 +120,7 @@ public class PhoebeRoadRunnerDrive extends MecanumDrive {
 
         dashboard = FtcDashboard.getInstance();
         dashboard.setTelemetryTransmissionInterval(25);
-
-        //dashboard = FtcDashboard.getInstance();
-        //dashboard.setTelemetryTransmissionInterval(25);
+        Match.log("Got FtcDashboard");
 
         clock = NanoClock.system();
 

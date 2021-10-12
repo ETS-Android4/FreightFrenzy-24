@@ -225,7 +225,7 @@ public class Robot {
         this.mecanumDriveTrain.setLocalizer(vslamCamera);
         this.vslamCamera.stop();
         this.vslamCamera.start();
-        this.vslamCamera.setStartingPose(pose);
+        this.vslamCamera.setInitialPose(pose);
     }
 
     public void reset() {

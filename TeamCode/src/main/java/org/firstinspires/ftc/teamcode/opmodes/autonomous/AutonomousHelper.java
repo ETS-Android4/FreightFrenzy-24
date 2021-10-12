@@ -20,19 +20,7 @@ public abstract class AutonomousHelper extends OpMode {
 
     ArrayList<State> states = new ArrayList<>();
 
-    protected boolean wobbleLifted, queuedWobbleLift;
-    protected boolean numberOfRingsDetermined, determinationQueued;
-    protected boolean firstWobbleDeposited, firstWobbleDepositQueued;
-    protected boolean navigated, navigationQueued;
-    protected boolean ringsShootingPositionReached, ringShootingPositionQueued;
-    protected boolean firstRingShot, firstRingShootingQueued;
-    protected boolean secondRingShot, secondRingShootingQueued;
-    protected boolean thirdRingShot, thirdRingShootingQueued;
-    protected boolean returnedForSecondWobble, returnForSecondWobbleQueued;
-    protected boolean collectedSecondWobble, collectionOfSecondWobbleQueued;
-    protected boolean secondWobbleGoalDeposited, secondWobbleGoalDepositQueued;
-    protected boolean wobbleRaisedInitially;
-    boolean cameraWorks = false;
+    protected boolean initialOperationsDone;
 
     Date initStartTime;
 
@@ -52,13 +40,12 @@ public abstract class AutonomousHelper extends OpMode {
         match.setAlliance(alliance);
         match.setStartingPosition(startingPosition);
         field = match.getField();
-        field.init();
+        field.init(alliance, startingPosition);
 
         this.robot = match.getRobot();
         Match.log("Initializing robot");
         this.robot.init(hardwareMap, telemetry, match);
-        wobbleRaisedInitially = false;
-        cameraWorks = false;
+        initialOperationsDone = false;
         Match.log("Robot initialized");
 
         telemetry.update();
@@ -74,29 +61,28 @@ public abstract class AutonomousHelper extends OpMode {
                     (30 - (int)(new Date().getTime() - initStartTime.getTime())/1000));
         }
         else if (robot.fullyInitialized()) {
-            if (!wobbleRaisedInitially) {
-                robot.setPose(Field.STARTING_POSE);
-                //robot.startVSLAM();
-                Match.log("Init complete");
+            if (!initialOperationsDone) {
+                initialOperationsDone = true;
+                robot.setPose(field.getStartingPose());
             }
             else if (!robot.havePosition()) {
                 telemetry.addData("Status", "Waiting for position, please wait");
             }
             else if (robot.allOperationsCompleted()) {
-                    double xError = robot.getCurrentX() / Field.MM_PER_INCH - Field.STARTING_POSE.getX();
-                    double yError = robot.getCurrentY() / Field.MM_PER_INCH - Field.STARTING_POSE.getY();
-                    double bearingError = AngleUnit.normalizeRadians(robot.getCurrentTheta()) - AngleUnit.normalizeRadians(Field.STARTING_POSE.getHeading());
+                    double xError = robot.getCurrentX() / Field.MM_PER_INCH - field.getStartingPose().getX();
+                    double yError = robot.getCurrentY() / Field.MM_PER_INCH - field.getStartingPose().getY();
+                    double bearingError = AngleUnit.normalizeRadians(robot.getCurrentTheta()) - AngleUnit.normalizeRadians(field.getStartingPose().getHeading());
                     if ((Math.abs(xError) > RobotConfig.ALLOWED_POSITIONAL_ERROR)
                             || (Math.abs(yError) > RobotConfig.ALLOWED_POSITIONAL_ERROR
                             || (Math.abs(bearingError) > RobotConfig.ALLOWED_BEARING_ERROR))) {
-                        telemetry.addData("Status", "PositionError:" + Field.STARTING_POSE + " v/s" + robot.getPosition() + ", please init again");
-                        robot.setPose(Field.STARTING_POSE);
+                        telemetry.addData("Status", "PositionError:" + field.getStartingPose() + " v/s" + robot.getPosition() + ", please init again");
+                        robot.setPose(field.getStartingPose());
                     } else {
                         match.updateTelemetry(telemetry,"Ready, let's go");
                     }
             }
             else {
-                telemetry.addData("Status", "Waiting for wobble to lift, please wait");
+                telemetry.addData("Status", "Waiting for initial operations, please wait");
             }
         }
         else {
