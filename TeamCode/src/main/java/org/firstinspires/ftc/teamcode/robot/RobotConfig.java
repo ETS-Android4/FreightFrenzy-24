@@ -22,4 +22,8 @@ public class RobotConfig {
     public static final double ALLOWED_POSITIONAL_ERROR = .25;
     public static final double SUPER_CAUTIOUS_SPEED = 0.2;
     public static final double REGULAR_SPEED = 0.6;
+    public static final String ARM_MOTOR = "armMotor";
+    public static final int ARM_MOTOR_INCREMENT = 10;
+    public static final double ARM_SERVO_INCREMENT = .001;
+    public static final String ARM_SERVO = "armServo";
 }

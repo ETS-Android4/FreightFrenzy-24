@@ -19,4 +19,11 @@ public class Carousel {
     public void stop() {
         this.motor.setPower(0);
     }
+
+    public String getStatus() {
+        return String.format("C:%d->%d@%.2f",
+                this.motor.getCurrentPosition(),
+                this.motor.getTargetPosition(),
+                this.motor.getPower());
+    }
 }

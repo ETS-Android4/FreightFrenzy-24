@@ -12,6 +12,7 @@ import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.teamcode.game.Alliance;
 import org.firstinspires.ftc.teamcode.game.Field;
 import org.firstinspires.ftc.teamcode.game.Match;
+import org.firstinspires.ftc.teamcode.robot.components.CappingArm;
 import org.firstinspires.ftc.teamcode.robot.components.Carousel;
 import org.firstinspires.ftc.teamcode.robot.components.drivetrain.MecanumDriveTrain;
 import org.firstinspires.ftc.teamcode.robot.components.vision.OpenCVWebcam;
@@ -39,6 +40,7 @@ public class Robot {
 
     MecanumDriveTrain mecanumDriveTrain;
     Carousel carousel;
+    CappingArm cappingArm;
     //WebCam webcam;
     OpenCVWebcam webcam;
     VslamCamera vslamCamera;
@@ -67,6 +69,7 @@ public class Robot {
         initCameras(match.getAlliance(), match.getStartingPosition());
         initDriveTrain();
         this.carousel = new Carousel(hardwareMap);
+        this.cappingArm = new CappingArm(hardwareMap);
 
         telemetry.addData("Status", "Creating operations thread, please wait");
         telemetry.update();
@@ -223,7 +226,25 @@ public class Robot {
             this.operationThreadTertiary.abort();
         }
         this.carousel.setSpeed(-gamePad2.left_stick_y);
+        this.handleCappingArm(gamePad2);
         this.handleDriveTrain(gamePad1);
+    }
+
+    public void handleCappingArm(Gamepad gamepad) {
+        //raise arm if right stick is pushed forward enough
+        if (gamepad.right_stick_y > 0.2) {
+            cappingArm.raiseArm();
+        }
+        else if (gamepad.right_stick_y < -0.2) {
+            cappingArm.lowerArm();
+        }
+
+        if (gamepad.left_trigger > 0.2) {
+            cappingArm.windServo();
+        }
+        else if (gamepad.right_trigger > 0.2) {
+            cappingArm.unwindServo();
+        }
     }
 
     public void setPose(Pose2d pose) {
@@ -266,5 +287,13 @@ public class Robot {
 
     public void setCarouselSpeed(double speed) {
         this.carousel.setSpeed(speed);
+    }
+
+    public String getCappingArmStatus() {
+        return this.cappingArm.getStatus();
+    }
+
+    public String getCarouselStatus() {
+        return this.carousel.getStatus();
     }
 }

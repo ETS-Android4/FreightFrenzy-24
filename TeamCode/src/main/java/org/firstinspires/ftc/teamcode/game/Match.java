@@ -109,6 +109,8 @@ public class Match {
             if (showPosition) {
                 telemetry.addData("Position", robot.getPosition());
             }
+            telemetry.addData("Arm", robot.getCappingArmStatus());
+            telemetry.addData("Carousel", robot.getCarouselStatus());
             updateDashBoard();
         }
         else {
