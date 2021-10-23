@@ -14,16 +14,16 @@ import org.opencv.imgproc.Imgproc;
 import java.util.ArrayList;
 import java.util.List;
 
-public class ObjectDetector {
+public class ContourDetector {
 
-    public static final double FOUR_RING_RATIO_THRESHOLD = .4f;
-
-    private static final String TAG = "ObjectDetector";
+    private static final String TAG = "ContourDetector";
     // Lower and Upper bounds for range checking in HSV color space
     private Scalar mLowerBound = new Scalar(0);
     private Scalar mUpperBound = new Scalar(0);
     private Mat mSpectrum = new Mat();
     private MatOfPoint largestContour = null;
+    List<MatOfPoint> contoursFound = new ArrayList<MatOfPoint>();
+    List<MatOfPoint> contoursInRange = new ArrayList<MatOfPoint>();
 
     double maxArea = 0;
     int minY = 9999, minX = 9999;
@@ -47,27 +47,10 @@ public class ObjectDetector {
     int minAllowedX;
     int maxAllowedX;
     int minAllowedY;
-
-    public void setMinAllowedX(int minAllowedX) {
-        this.minAllowedX = minAllowedX;
-    }
-
-    public void setMaxAllowedX(int maxAllowedX) {
-        this.maxAllowedX = maxAllowedX;
-    }
-
-    public void setMinAllowedY(int minAllowedY) {
-        this.minAllowedY = minAllowedY;
-    }
-
-    public void setMaxAllowedY(int maxAllowedY) {
-        this.maxAllowedY = maxAllowedY;
-    }
-
     int maxAllowedY;
 
-    public ObjectDetector(Scalar minColor, Scalar maxColor,
-                          int minAllowedX, int maxAllowedX, int minAllowedY, int maxAllowedY) {
+    public ContourDetector(Scalar minColor, Scalar maxColor,
+                           int minAllowedX, int maxAllowedX, int minAllowedY, int maxAllowedY) {
         this.setHsvColorRange(minColor, maxColor);
         this.minAllowedX = minAllowedX;
         this.maxAllowedX = maxAllowedX;
@@ -115,7 +98,11 @@ public class ObjectDetector {
         return areaOfInterest;
     }
 
-    public MatOfPoint process(Mat rgbaImage) {
+    public List<MatOfPoint> process(Mat rgbaImage) {
+        contoursFound.clear();
+        contoursInRange.clear();
+        largestContour = null;
+
         Imgproc.pyrDown(rgbaImage, mPyrDownMat);
         Imgproc.pyrDown(mPyrDownMat, mPyrDownMat);
 
@@ -124,30 +111,34 @@ public class ObjectDetector {
         Core.inRange(mHsvMat, mLowerBound, mUpperBound, mMask);
         Imgproc.dilate(mMask, mDilatedMask, new Mat());
 
-        List<MatOfPoint> contoursFound = new ArrayList<MatOfPoint>();
         Imgproc.findContours(mDilatedMask, contoursFound, mHierarchy, Imgproc.RETR_EXTERNAL, Imgproc.CHAIN_APPROX_SIMPLE);
 
         minX = minY = 9999;
         maxX = maxY = 0;
         maxArea = 0;
         for (MatOfPoint contour: contoursFound) {
-            double area = Imgproc.contourArea(contour);
-            if (area > maxArea) {
-                Rect boundingRectangle = Imgproc.boundingRect(contour);
-                if (boundingRectangle.x*4 <= maxAllowedX && boundingRectangle.x*4 >= minAllowedX
+            Rect boundingRectangle = Imgproc.boundingRect(contour);
+            if (boundingRectangle.x*4 <= maxAllowedX && boundingRectangle.x*4 >= minAllowedX
                     && boundingRectangle.y*4 <= maxAllowedY && boundingRectangle.y*4 >=minAllowedY ) {
+                double area = Imgproc.contourArea(contour);
+                contoursInRange.add(contour);
+                if (area > maxArea) {
                     maxArea = area;
-                    Core.multiply(contour, new Scalar(4,4), contour);
                     largestContour = contour;
+                    Core.multiply(contour, new Scalar(4,4), contour);
                     minX = boundingRectangle.x*4;
                     maxX = boundingRectangle.x*4 + boundingRectangle.width*4;
                     minY = boundingRectangle.y*4;
                     maxY = boundingRectangle.y*4 + boundingRectangle.height*4;
                     updateObjectPosition();
+                    largestContour = contour;
                 }
                 mean = Core.mean(contour);
             }
         }
+        return contoursInRange;
+    }
+    public MatOfPoint getLargestContour() {
         return largestContour;
     }
     void updateObjectPosition() {
@@ -216,6 +207,31 @@ public class ObjectDetector {
         setupAreaOfInterest();
     }
 
+    public void decrementMinHue() {
+        mLowerBound.val[0] = Math.max(mLowerBound.val[0] - 1, 0);
+    }
+    public void decrementMaxHue() {
+        mUpperBound.val[0] = Math.max(mUpperBound.val[0] - 1, mLowerBound.val[0]);
+    }
+    public void incrementMinHue() {
+        mLowerBound.val[0] = Math.min(mLowerBound.val[0] + 1, mUpperBound.val[0]);
+    }
+    public void incrementMaxHue() {
+        mUpperBound.val[0] = Math.min(mUpperBound.val[0] + 1, 255);
+    }
+
+    public void decrementMinSaturation() {
+        mLowerBound.val[1] = Math.max(mLowerBound.val[1] - 1, 0);
+    }
+    public void decrementMaxSaturation() {
+        mUpperBound.val[1] = Math.max(mUpperBound.val[1] - 1, mLowerBound.val[1]);
+    }
+    public void incrementMinSaturation() {
+        mLowerBound.val[1] = Math.min(mLowerBound.val[1] + 1, mUpperBound.val[1]);
+    }
+    public void incrementMaxSaturation() {
+        mUpperBound.val[1] = Math.min(mUpperBound.val[1] + 1, 255);
+    }
     /** Return the distance to the object from the camera in inches
      *
      * @return

@@ -9,6 +9,8 @@ public class RobotConfig {
     public static final String RIGHT_REAR_DRIVE = "rightRearDrive";
     public static final String RIGHT_FRONT_DRIVE = "rightFrontDrive";
 
+    public static final String CAROUSEL_MOTOR = "carousel";
+
     //camera servo
     public static final String CAMERA_SERVO = "cameraServo";
 
@@ -16,7 +18,7 @@ public class RobotConfig {
     public static final String WEBCAM_ID = "Webcam 1";
     public static final double WIDTH = 17.5* Field.MM_PER_INCH;
     public static final double LENGTH = 17.5* Field.MM_PER_INCH;
-    public static final double ALLOWED_BEARING_ERROR = Math.toRadians(0.5);
+    public static final double ALLOWED_BEARING_ERROR = 0.5;
     public static final double ALLOWED_POSITIONAL_ERROR = .25;
     public static final double SUPER_CAUTIOUS_SPEED = 0.2;
     public static final double REGULAR_SPEED = 0.6;

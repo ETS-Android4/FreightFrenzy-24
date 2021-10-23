@@ -2,7 +2,6 @@ package org.firstinspires.ftc.teamcode.opmodes.autonomous;
 
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 
-import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.teamcode.game.Alliance;
 import org.firstinspires.ftc.teamcode.game.Field;
 import org.firstinspires.ftc.teamcode.game.Match;
@@ -66,16 +65,22 @@ public abstract class AutonomousHelper extends OpMode {
                 robot.setPose(field.getStartingPose());
             }
             else if (!robot.havePosition()) {
-                telemetry.addData("Status", "Waiting for position, please wait");
+                telemetry.addData("Status", "VSLAM initializing, please wait");
             }
             else if (robot.allOperationsCompleted()) {
                     double xError = robot.getCurrentX() / Field.MM_PER_INCH - field.getStartingPose().getX();
                     double yError = robot.getCurrentY() / Field.MM_PER_INCH - field.getStartingPose().getY();
-                    double bearingError = AngleUnit.normalizeRadians(robot.getCurrentTheta()) - AngleUnit.normalizeRadians(field.getStartingPose().getHeading());
+                    double bearingError = (Math.toDegrees(robot.getCurrentTheta())
+                            - Math.toDegrees(field.getStartingPose().getHeading())) % 360;
                     if ((Math.abs(xError) > RobotConfig.ALLOWED_POSITIONAL_ERROR)
                             || (Math.abs(yError) > RobotConfig.ALLOWED_POSITIONAL_ERROR
                             || (Math.abs(bearingError) > RobotConfig.ALLOWED_BEARING_ERROR))) {
-                        telemetry.addData("Status", "PositionError:" + field.getStartingPose() + " v/s" + robot.getPosition() + ", please init again");
+                        telemetry.addData("Status", String.format("Position Error:%s v/s %s, xErr:%.2f, yErr:%.2f, hErr:%.2f",
+                                field.getStartingPose(),
+                                robot.getPosition(),
+                                xError,
+                                yError,
+                                bearingError));
                         robot.setPose(field.getStartingPose());
                     } else {
                         match.updateTelemetry(telemetry,"Ready, let's go");

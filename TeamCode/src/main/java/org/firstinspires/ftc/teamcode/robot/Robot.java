@@ -8,9 +8,11 @@ import com.qualcomm.robotcore.hardware.Gamepad;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
+import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.teamcode.game.Alliance;
 import org.firstinspires.ftc.teamcode.game.Field;
 import org.firstinspires.ftc.teamcode.game.Match;
+import org.firstinspires.ftc.teamcode.robot.components.Carousel;
 import org.firstinspires.ftc.teamcode.robot.components.drivetrain.MecanumDriveTrain;
 import org.firstinspires.ftc.teamcode.robot.components.vision.OpenCVWebcam;
 import org.firstinspires.ftc.teamcode.robot.components.vision.VslamCamera;
@@ -36,6 +38,7 @@ public class Robot {
     OperationThread operationThreadTertiary;
 
     MecanumDriveTrain mecanumDriveTrain;
+    Carousel carousel;
     //WebCam webcam;
     OpenCVWebcam webcam;
     VslamCamera vslamCamera;
@@ -63,6 +66,7 @@ public class Robot {
         //initialize our components
         initCameras(match.getAlliance(), match.getStartingPosition());
         initDriveTrain();
+        this.carousel = new Carousel(hardwareMap);
 
         telemetry.addData("Status", "Creating operations thread, please wait");
         telemetry.update();
@@ -91,7 +95,7 @@ public class Robot {
         telemetry.addData("Status", "Initializing Webcam, please wait");
         telemetry.update();
         this.webcam = new OpenCVWebcam();
-        this.webcam.init(hardwareMap, telemetry, OpenCVWebcam.RING_COLOR_MIN, OpenCVWebcam.RING_COLOR_MAX);
+        this.webcam.init(hardwareMap, telemetry, OpenCVWebcam.BOX_COLOR_MIN, OpenCVWebcam.BOX_COLOR_MAX);
 
         //initialize Vslam camera
         Match.log("Initializing VSLAM");
@@ -162,7 +166,7 @@ public class Robot {
      * @return
      */
     public double getCurrentTheta() {
-        return this.vslamCamera.getPoseEstimate().getHeading();}
+        return AngleUnit.normalizeRadians(this.vslamCamera.getPoseEstimate().getHeading());}
 
     public boolean allOperationsCompleted() {
         return primaryOperationsCompleted() && secondaryOperationsCompleted() && tertiaryOperationsCompleted();
@@ -218,6 +222,7 @@ public class Robot {
             this.operationThreadSecondary.abort();
             this.operationThreadTertiary.abort();
         }
+        this.carousel.setSpeed(-gamePad2.left_stick_y);
         this.handleDriveTrain(gamePad1);
     }
 
@@ -257,5 +262,9 @@ public class Robot {
 
     public MecanumDriveTrain getDriveTrain() {
         return this.mecanumDriveTrain;
+    }
+
+    public void setCarouselSpeed(double speed) {
+        this.carousel.setSpeed(speed);
     }
 }

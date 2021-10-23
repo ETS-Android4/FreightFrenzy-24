@@ -33,6 +33,7 @@ import org.firstinspires.ftc.teamcode.game.Match;
 import org.firstinspires.ftc.teamcode.robot.RobotConfig;
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfPoint;
+import org.opencv.core.Point;
 import org.opencv.core.Rect;
 import org.opencv.core.Scalar;
 import org.opencv.imgproc.Imgproc;
@@ -43,6 +44,7 @@ import org.openftc.easyopencv.OpenCvPipeline;
 import org.openftc.easyopencv.OpenCvWebcam;
 
 import java.util.ArrayList;
+import java.util.List;
 
 public class OpenCVWebcam {
 
@@ -50,8 +52,10 @@ public class OpenCVWebcam {
     public static final double CAMERA_SERVO_FORWARD_POSITION = 0.51;
     public static final int FOCAL_LENGTH = 1500;
 
-    public static final Scalar RING_COLOR_MIN = new Scalar(12, 50, 50);
-    public static final Scalar RING_COLOR_MAX = new Scalar(22, 255, 255);
+    public static final Scalar BOX_COLOR_MIN = new Scalar(12, 50, 50);
+    public static final Scalar BOX_COLOR_MAX = new Scalar(22, 255, 255);
+    public static final Scalar SILVER_COLOR_MIN = new Scalar(220, 0, 128);
+    public static final Scalar SILVER_COLOR_MAX = new Scalar(255, 20, 220);
 
     public static final int Y_PIXEL_COUNT = 1920;
     public static final int X_PIXEL_COUNT = 1080;
@@ -61,24 +65,6 @@ public class OpenCVWebcam {
     Pipeline pipeline;
     Scalar colorMin;
     Scalar colorMax;
-
-    double distanceToRing, angleToRing;
-
-    public Scalar getColorMin() {
-        return this.colorMin;
-    }
-
-    public void setColorMin(Scalar colorMin) {
-        this.colorMin = colorMin;
-    }
-
-    public Scalar getColorMax() {
-        return colorMax;
-    }
-
-    public void setColorMax(Scalar colorMax) {
-        this.colorMax = colorMax;
-    }
 
     public static final Object synchronizer = new Object();
 
@@ -150,111 +136,112 @@ public class OpenCVWebcam {
      * Return the road runner pose of the object seen relative to the robot.
      * The robot is assumed to be facing the y axis with positive being in front of the robot.
      * Positive X axis is assumed to be running away to robot's right
-     * @return
+     * @return Pose of object relative to the robot's center
      */
-    public Pose2d getRelativeRingPosition() {
+    public Pose2d getRelativeObjectPosition() {
         return null;
     }
 
     /**
      * Return the road runner pose of the object seen relative to the field.
      *
-     * @return
+     * @return Pose of object in relation to the field
      */
-    public Pose2d getAbsoluteRingPosition(Pose2d robotPosition) {
+    public Pose2d getAbsoluteObjectPosition(Pose2d robotPosition) {
 
-        Pose2d relativeRingPosition = getRelativeRingPosition();
-        if (relativeRingPosition != null) {
+        Pose2d relativeObjectPosition = getRelativeObjectPosition();
+        if (relativeObjectPosition != null) {
             double heading = AngleUnit.normalizeRadians
-                    (robotPosition.getHeading() + Math.toRadians(270) + relativeRingPosition.getHeading());
-            double hypotenuse = Math.hypot(relativeRingPosition.getX(), relativeRingPosition.getY());
+                    (robotPosition.getHeading() + Math.toRadians(270) + relativeObjectPosition.getHeading());
+            double hypotenuse = Math.hypot(relativeObjectPosition.getX(), relativeObjectPosition.getY());
             double x = Math.cos(heading) * hypotenuse;
             double y = Math.sin(heading) * hypotenuse;
-            Vector2d ringAbsoluteVector = robotPosition.vec().plus(new Vector2d(x, y));
-            return new Pose2d(ringAbsoluteVector, heading);
+            Vector2d objectAbsoluteVector = robotPosition.vec().plus(new Vector2d(x, y));
+            return new Pose2d(objectAbsoluteVector, heading);
         }
         return null;
     }
 
     public void decrementMinX() {
-        pipeline.objectDetector.decrementMinAllowedX();
+        pipeline.contourDetector.decrementMinAllowedX();
     }
 
     public void incrementMinX() {
-        pipeline.objectDetector.incrementMinAllowedX();
+        pipeline.contourDetector.incrementMinAllowedX();
     }
     public void decrementMaxX() {
-        pipeline.objectDetector.decrementMaxAllowedX();
+        pipeline.contourDetector.decrementMaxAllowedX();
     }
     public void incrementMaxX() {
-        pipeline.objectDetector.incrementMaxAllowedX();
+        pipeline.contourDetector.incrementMaxAllowedX();
     }
     public void decrementMinY() {
-        pipeline.objectDetector.decrementMinAllowedY();
+        pipeline.contourDetector.decrementMinAllowedY();
     }
     public void incrementMinY() {
-        pipeline.objectDetector.incrementMinAllowedY();
+        pipeline.contourDetector.incrementMinAllowedY();
     }
     public void decrementMaxY() {
-        pipeline.objectDetector.decrementMaxAllowedY();
+        pipeline.contourDetector.decrementMaxAllowedY();
     }
     public void incrementMaxY() {
-        pipeline.objectDetector.incrementMaxAllowedY();
+        pipeline.contourDetector.incrementMaxAllowedY();
     }
-    public void setMinX(int minX) {
-        pipeline.objectDetector.setMinAllowedX(minX);
-    }
-    public void setMaxX(int maxX) {
-        pipeline.objectDetector.setMaxAllowedX(maxX);
-    }
-    public void setMinY(int minY) {
-        pipeline.objectDetector.setMinAllowedY(minY);
-    }
-    public void setMaxY(int maxY) {
-        pipeline.objectDetector.setMaxAllowedY(maxY);
-    }
+    public void decrementMinHue() {pipeline.contourDetector.decrementMinHue();}
+    public void decrementMaxHue() {pipeline.contourDetector.decrementMaxHue();}
+    public void incrementMinHue() {pipeline.contourDetector.incrementMinHue();}
+    public void incrementMaxHue() {pipeline.contourDetector.incrementMaxHue();}
+    public void decrementMinSaturation() {pipeline.contourDetector.decrementMinSaturation();}
+    public void decrementMaxSaturation() {pipeline.contourDetector.decrementMaxSaturation();}
+    public void incrementMinSaturation() {pipeline.contourDetector.incrementMinSaturation();}
+    public void incrementMaxSaturation() {pipeline.contourDetector.incrementMaxSaturation();}
+
     public String getBounds() {
-        return (pipeline.objectDetector.getBounds());
+        return (pipeline.contourDetector.getBounds());
     }
 
     public int getMinX() {
-        return pipeline.objectDetector.minX;
+        return pipeline.contourDetector.minX;
     }
     public int getMaxX() {
-        return pipeline.objectDetector.maxX;
+        return pipeline.contourDetector.maxX;
     }
     public int getMinY() {
-        return pipeline.objectDetector.minY;
+        return pipeline.contourDetector.minY;
     }
     public int getMaxY() {
-        return pipeline.objectDetector.maxY;
+        return pipeline.contourDetector.maxY;
     }
 
     public double getXPosition() {
-        return pipeline.objectDetector.getXPosition();
+        return pipeline.contourDetector.getXPosition();
     }
     public double getYPosition() {
-        return pipeline.objectDetector.getYPosition();
+        return pipeline.contourDetector.getYPosition();
     }
 
     /**
      * Return the distance to object in inches
      * @return
      */
-    public double getDistanceToObjectFromCamera() { return pipeline.objectDetector.distanceToObjectFromCamera;}
-    public double getDistanceToObjectFromCenter() { return pipeline.objectDetector.distanceFromCenterOfRobot();}
-    public double getAngleToObjectFromCamera() { return pipeline.objectDetector.angleToObjectFromCamera;}
-    public double getAngleToObjectFromCenter() { return pipeline.objectDetector.angleFromCenterOfRobot();}
+    public double getDistanceToObjectFromCamera() { return pipeline.contourDetector.distanceToObjectFromCamera;}
+    public double getDistanceToObjectFromCenter() { return pipeline.contourDetector.distanceFromCenterOfRobot();}
+    public double getAngleToObjectFromCamera() { return pipeline.contourDetector.angleToObjectFromCamera;}
+    public double getAngleToObjectFromCenter() { return pipeline.contourDetector.angleFromCenterOfRobot();}
     public Scalar getMean() {
-        return pipeline.objectDetector.getMean();
+        return pipeline.contourDetector.getMean();
     }
 
-    public Object getWidth() {
+    public int getWidth() {
         return getMaxY() - getMinY();
     }
 
-    public Object getHeight() {
+    public int getHeight() {
         return getMaxX() - getMinX();
+    }
+
+    public boolean seeingObject() {
+        return pipeline.contourDetector.getLargestArea() > 0;
     }
     public class Pipeline extends OpenCvPipeline {
         Telemetry telemetry;
@@ -268,24 +255,29 @@ public class OpenCVWebcam {
         final Scalar RED = new Scalar(255, 0, 0);
         final Scalar GREEN = new Scalar(0, 255, 0);
         final Scalar BLUE = new Scalar(0, 0, 255);
+        final Scalar SILVER = new Scalar(192, 192, 192);
 
-        public ObjectDetector objectDetector = new ObjectDetector(colorMin, colorMax,
+        public ContourDetector contourDetector = new ContourDetector(colorMin, colorMax,
                 0, 480, 0, 1700);
 
         @Override
         public Mat processFrame(Mat input) {
             synchronized (synchronizer) {
-                MatOfPoint contour = objectDetector.process(input);
-                if (contour != null) {
-                    ArrayList<MatOfPoint> contours = new ArrayList<>();
-                    contours.add(contour);
-                    Imgproc.drawContours(input, contours, -1, GREEN, 5);
+                List<MatOfPoint> contours = contourDetector.process(input);
+                Imgproc.drawContours(input, contours, -1, GREEN, 1);
+                MatOfPoint largestContour = contourDetector.getLargestContour();
+                if (largestContour != null) {
+                    List<MatOfPoint> largestContours = new ArrayList<>();
+                    largestContours.add(largestContour);
+                    Imgproc.drawContours(input, largestContours, -1, BLUE, 2);
+                    ContourDetector silverDetector = new ContourDetector(OpenCVWebcam.SILVER_COLOR_MIN, OpenCVWebcam.SILVER_COLOR_MAX,
+                            contourDetector.minX, contourDetector.maxX, contourDetector.minY, contourDetector.maxY);
+                    List<MatOfPoint> silverContours = silverDetector.process(input);
+                    Imgproc.drawContours(input, silverContours, -1, RED, 3);
+                    Imgproc.putText(input, "Silver:" + silverContours.size(), new Point(100, 100), Imgproc.FONT_HERSHEY_COMPLEX, 4, SILVER);
                 }
-                Rect limitsRectangle = objectDetector.getAreaOfInterest();
+                Rect limitsRectangle = contourDetector.getAreaOfInterest();
                 Imgproc.rectangle(input, limitsRectangle, RED, 6);
-
-                synchronized (synchronizer) {
-                }
                 return input;
             }
         }
