@@ -29,10 +29,12 @@
 
 package org.firstinspires.ftc.teamcode.opmodes.drivercontrolled;
 
+import com.qualcomm.hardware.rev.RevBlinkinLedDriver;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.util.RobotLog;
 
+import org.firstinspires.ftc.teamcode.game.Alliance;
 import org.firstinspires.ftc.teamcode.game.Match;
 import org.firstinspires.ftc.teamcode.robot.Robot;
 
@@ -74,6 +76,12 @@ public class DriverControlledOperation extends OpMode {
         this.match = Match.getInstance();
         match.setTeleopStartTime(new Date());
         robot.reset();
+        if (match.getAlliance()== Alliance.Color.RED) {
+            robot.setPattern(RevBlinkinLedDriver.BlinkinPattern.SHOT_RED);
+        }
+        else {
+            robot.setPattern(RevBlinkinLedDriver.BlinkinPattern.SHOT_BLUE);
+        }
 
         try {
             robot.setState("Initialized");
@@ -88,6 +96,7 @@ public class DriverControlledOperation extends OpMode {
             try {
                 Thread.sleep(1000);
             } catch (InterruptedException ex) {
+                RobotLog.ee("Silver Titans", e, "Interrupted in sleep");
             }
         }
     }

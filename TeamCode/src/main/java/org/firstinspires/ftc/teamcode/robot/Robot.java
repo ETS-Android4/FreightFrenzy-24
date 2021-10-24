@@ -4,6 +4,7 @@ import android.util.Log;
 
 import com.acmerobotics.roadrunner.geometry.Pose2d;
 import com.acmerobotics.roadrunner.trajectory.TrajectoryBuilder;
+import com.qualcomm.hardware.rev.RevBlinkinLedDriver;
 import com.qualcomm.robotcore.hardware.Gamepad;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
@@ -14,6 +15,7 @@ import org.firstinspires.ftc.teamcode.game.Field;
 import org.firstinspires.ftc.teamcode.game.Match;
 import org.firstinspires.ftc.teamcode.robot.components.CappingArm;
 import org.firstinspires.ftc.teamcode.robot.components.Carousel;
+import org.firstinspires.ftc.teamcode.robot.components.LED;
 import org.firstinspires.ftc.teamcode.robot.components.drivetrain.MecanumDriveTrain;
 import org.firstinspires.ftc.teamcode.robot.components.vision.OpenCVWebcam;
 import org.firstinspires.ftc.teamcode.robot.components.vision.VslamCamera;
@@ -41,6 +43,7 @@ public class Robot {
     MecanumDriveTrain mecanumDriveTrain;
     Carousel carousel;
     CappingArm cappingArm;
+    org.firstinspires.ftc.teamcode.robot.components.LED led;
     //WebCam webcam;
     OpenCVWebcam webcam;
     VslamCamera vslamCamera;
@@ -70,6 +73,13 @@ public class Robot {
         initDriveTrain();
         this.carousel = new Carousel(hardwareMap);
         this.cappingArm = new CappingArm(hardwareMap);
+        this.led = new LED(hardwareMap);
+        if (match.getAlliance() == Alliance.Color.RED) {
+            this.led.setPattern(RevBlinkinLedDriver.BlinkinPattern.RED);
+        }
+        else {
+            this.led.setPattern(RevBlinkinLedDriver.BlinkinPattern.BLUE);
+        }
 
         telemetry.addData("Status", "Creating operations thread, please wait");
         telemetry.update();
@@ -166,7 +176,7 @@ public class Robot {
 
     /**
      * Returns the current heading of the robot in radians
-     * @return
+     * @return the heading in radians
      */
     public double getCurrentTheta() {
         return AngleUnit.normalizeRadians(this.vslamCamera.getPoseEstimate().getHeading());}
@@ -239,11 +249,14 @@ public class Robot {
             cappingArm.lowerArm();
         }
 
-        if (gamepad.left_trigger > 0.2) {
+        if (gamepad.left_trigger > 0) {
             cappingArm.windServo();
         }
-        else if (gamepad.right_trigger > 0.2) {
+        else if (gamepad.right_trigger > 0) {
             cappingArm.unwindServo();
+        }
+        else {
+            cappingArm.stopServo();
         }
     }
 
@@ -295,5 +308,9 @@ public class Robot {
 
     public String getCarouselStatus() {
         return this.carousel.getStatus();
+    }
+
+    public void setPattern(RevBlinkinLedDriver.BlinkinPattern pattern) {
+        this.led.setPattern(pattern);
     }
 }

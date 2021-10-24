@@ -6,6 +6,8 @@ import com.qualcomm.robotcore.hardware.HardwareMap;
 
 import org.firstinspires.ftc.teamcode.robot.RobotConfig;
 
+import java.util.Locale;
+
 public class CappingArm {
     DcMotor motor;
     CRServo servo;
@@ -36,6 +38,10 @@ public class CappingArm {
         this.servo.setPower(this.servo.getPower() - RobotConfig.ARM_SERVO_INCREMENT);
     }
 
+    public void stopServo() {
+        this.servo.setPower(0);
+    }
+
     public void stop() {
         this.motor.setPower(0);
         this.servo.setPower(0);
@@ -47,7 +53,7 @@ public class CappingArm {
 
 
     public String getStatus() {
-        return String.format("A:%d->%d@%.2f,S:%.3f",
+        return String.format(Locale.getDefault(), "A:%d->%d@%.2f,S:%.3f",
                 this.motor.getCurrentPosition(),
                 this.motor.getTargetPosition(),
                 this.motor.getPower(),

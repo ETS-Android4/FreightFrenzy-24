@@ -26,4 +26,7 @@ public class RobotConfig {
     public static final int ARM_MOTOR_INCREMENT = 10;
     public static final double ARM_SERVO_INCREMENT = .001;
     public static final String ARM_SERVO = "armServo";
+
+    public static final double MAX_CAROUSEL_SPEED = 0.6;
+    public static final String BLINKIN = "blinkin";
 }

@@ -5,6 +5,8 @@ import com.qualcomm.robotcore.hardware.HardwareMap;
 
 import org.firstinspires.ftc.teamcode.robot.RobotConfig;
 
+import java.util.Locale;
+
 public class Carousel {
     DcMotor motor;
     public Carousel(HardwareMap hardwareMap) {
@@ -13,7 +15,7 @@ public class Carousel {
     }
 
     public void setSpeed(double speed) {
-        this.motor.setPower(speed);
+        this.motor.setPower(Math.max((Math.min(speed, RobotConfig.MAX_CAROUSEL_SPEED)), -RobotConfig.MAX_CAROUSEL_SPEED));
     }
 
     public void stop() {
@@ -21,7 +23,7 @@ public class Carousel {
     }
 
     public String getStatus() {
-        return String.format("C:%d->%d@%.2f",
+        return String.format(Locale.getDefault(),"C:%d->%d@%.2f",
                 this.motor.getCurrentPosition(),
                 this.motor.getTargetPosition(),
                 this.motor.getPower());
