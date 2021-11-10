@@ -11,7 +11,7 @@ import java.util.Locale;
 
 public class DriveForTimeOperation extends Operation {
     private long time;
-    private double desiredHeading;
+    private double robotRelativeHeading;
     private double speed;
     private MecanumDriveTrain driveTrain;
 
@@ -25,15 +25,15 @@ public class DriveForTimeOperation extends Operation {
 
     public DriveForTimeOperation(long time, double heading, double speed, MecanumDriveTrain driveTrain, String title) {
         this.time = time;
-        this.desiredHeading = heading;
+        this.robotRelativeHeading = heading;
         this.speed = speed;
         this.driveTrain = driveTrain;
         this.title = title;
     }
 
     public String toString() {
-        return String.format(Locale.getDefault(), "StraightLine: %d@%.2f --%s",
-                this.time, this.desiredHeading,
+        return String.format(Locale.getDefault(), "DriveForTime: %d@%.2f --%s",
+                this.time, this.robotRelativeHeading,
                 this.title);
     }
 
@@ -42,7 +42,7 @@ public class DriveForTimeOperation extends Operation {
             driveTrain.stop();
             return true;
         } else {
-            driveTrain.drive(this.desiredHeading, this.getSpeed(), 0);
+            driveTrain.drive(this.robotRelativeHeading, this.getSpeed(), 0);
             return false;
         }
     }

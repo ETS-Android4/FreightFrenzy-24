@@ -24,9 +24,12 @@ public class RobotConfig {
     public static final double REGULAR_SPEED = 0.6;
     public static final String ARM_MOTOR = "armMotor";
     public static final int ARM_MOTOR_INCREMENT = 10;
-    public static final double ARM_SERVO_INCREMENT = .001;
+    public static final double ARM_SERVO_INCREMENT = .01;
     public static final String ARM_SERVO = "armServo";
 
     public static final double MAX_CAROUSEL_SPEED = 0.6;
     public static final String BLINKIN = "blinkin";
+    public static final long CAROUSEL_SPINNER_REQUIRED_TIME = 2000; //2 seconds to spin carousel for delivery
+    public static final String INOUT_TAKE_MOTOR = "inoutMotor";
+    public static final double MAX_INOUT_SPEED = 1.0;
 }

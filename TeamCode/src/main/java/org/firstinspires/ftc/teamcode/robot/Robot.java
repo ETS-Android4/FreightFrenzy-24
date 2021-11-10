@@ -14,7 +14,8 @@ import org.firstinspires.ftc.teamcode.game.Alliance;
 import org.firstinspires.ftc.teamcode.game.Field;
 import org.firstinspires.ftc.teamcode.game.Match;
 import org.firstinspires.ftc.teamcode.robot.components.CappingArm;
-import org.firstinspires.ftc.teamcode.robot.components.Carousel;
+import org.firstinspires.ftc.teamcode.robot.components.CarouselSpinner;
+import org.firstinspires.ftc.teamcode.robot.components.InOutTake;
 import org.firstinspires.ftc.teamcode.robot.components.LED;
 import org.firstinspires.ftc.teamcode.robot.components.drivetrain.MecanumDriveTrain;
 import org.firstinspires.ftc.teamcode.robot.components.vision.OpenCVWebcam;
@@ -41,7 +42,8 @@ public class Robot {
     OperationThread operationThreadTertiary;
 
     MecanumDriveTrain mecanumDriveTrain;
-    Carousel carousel;
+    CarouselSpinner carouselSpinner;
+    InOutTake inOutTake;
     CappingArm cappingArm;
     org.firstinspires.ftc.teamcode.robot.components.LED led;
     //WebCam webcam;
@@ -71,7 +73,8 @@ public class Robot {
         //initialize our components
         initCameras(match.getAlliance(), match.getStartingPosition());
         initDriveTrain();
-        this.carousel = new Carousel(hardwareMap);
+        this.carouselSpinner = new CarouselSpinner(hardwareMap);
+        this.inOutTake = new InOutTake(hardwareMap);
         this.cappingArm = new CappingArm(hardwareMap);
         this.led = new LED(hardwareMap);
         if (match.getAlliance() == Alliance.Color.RED) {
@@ -108,7 +111,7 @@ public class Robot {
         telemetry.addData("Status", "Initializing Webcam, please wait");
         telemetry.update();
         this.webcam = new OpenCVWebcam();
-        this.webcam.init(hardwareMap, telemetry, OpenCVWebcam.BOX_COLOR_MIN, OpenCVWebcam.BOX_COLOR_MAX);
+        this.webcam.init(hardwareMap, telemetry, OpenCVWebcam.ELEMENT_COLOR_MIN, OpenCVWebcam.ELEMENT_COLOR_MAX);
 
         //initialize Vslam camera
         Match.log("Initializing VSLAM");
@@ -129,8 +132,8 @@ public class Robot {
         this.operationThreadTertiary.abort();
         this.mecanumDriveTrain.stop();
 
-        //stop our camera
-        this.vslamCamera.stop();
+        this.cappingArm.stop();
+        this.inOutTake.stop();
         Match.log(("Robot stopped"));
     }
 
@@ -235,17 +238,18 @@ public class Robot {
             this.operationThreadSecondary.abort();
             this.operationThreadTertiary.abort();
         }
-        this.carousel.setSpeed(-gamePad2.left_stick_y);
+        this.carouselSpinner.setSpeed(-gamePad2.left_stick_y);
+        this.inOutTake.setSpeed(-gamePad2.right_stick_y);
         this.handleCappingArm(gamePad2);
         this.handleDriveTrain(gamePad1);
     }
 
     public void handleCappingArm(Gamepad gamepad) {
         //raise arm if right stick is pushed forward enough
-        if (gamepad.right_stick_y > 0.2) {
+        if (gamepad.dpad_up) {
             cappingArm.raiseArm();
         }
-        else if (gamepad.right_stick_y < -0.2) {
+        else if (gamepad.dpad_down) {
             cappingArm.lowerArm();
         }
 
@@ -260,11 +264,9 @@ public class Robot {
         }
     }
 
-    public void setPose(Pose2d pose) {
+    public boolean setInitialPose(Pose2d pose) {
         this.mecanumDriveTrain.setLocalizer(vslamCamera);
-        this.vslamCamera.stop();
-        this.vslamCamera.start();
-        this.vslamCamera.setInitialPose(pose);
+        return this.vslamCamera.setCurrentPose(pose);
     }
 
     public void reset() {
@@ -298,8 +300,8 @@ public class Robot {
         return this.mecanumDriveTrain;
     }
 
-    public void setCarouselSpeed(double speed) {
-        this.carousel.setSpeed(speed);
+    public void setCarouselSpinnerSpeed(double speed) {
+        this.carouselSpinner.setSpeed(speed);
     }
 
     public String getCappingArmStatus() {
@@ -307,10 +309,25 @@ public class Robot {
     }
 
     public String getCarouselStatus() {
-        return this.carousel.getStatus();
+        return this.carouselSpinner.getStatus();
+    }
+
+    public String getInoutStatus() {
+        return this.inOutTake.getStatus();
     }
 
     public void setPattern(RevBlinkinLedDriver.BlinkinPattern pattern) {
         this.led.setPattern(pattern);
+    }
+    public CarouselSpinner getCarouselSpinner() {
+        return this.carouselSpinner;
+    }
+
+    public String getVSLAMStatus() {
+        return this.vslamCamera.getStatus();
+    }
+
+    public int getBarCodeLevel() {
+        return this.webcam.getBarCodeLevel();
     }
 }

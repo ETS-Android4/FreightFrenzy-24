@@ -25,12 +25,15 @@ public class Match {
     public static String TEAM = "SilverTitans";
     private Robot robot = null;
     private Field field = null;
-    private FtcDashboard dashboard = FtcDashboard.getInstance();
+    private final FtcDashboard dashboard = FtcDashboard.getInstance();
     private Date startTime = new Date();
     private Date teleopStartTime = new Date();
     private Alliance.Color alliance;
 
+    private int barcodeLevel;
+
     private Field.StartingPosition startingPosition;
+    private String trajectoryError = "";
 
     synchronized public static Match getNewInstance() {
         match = new Match();
@@ -52,8 +55,8 @@ public class Match {
     }
 
     /**
-     * Return the number of mill-seconds since the match was started
-     * @return
+     * Return the number of milli-seconds since the match was started
+     * @return the number of milliseconds since match start
      */
     public long getElapsed() {
         return new Date().getTime() - startTime.getTime();
@@ -93,24 +96,21 @@ public class Match {
         RobotLog.a(TEAM + ":" + s);
     }
 
-    public void updateTelemetry(Telemetry telemetry, String status) {
-        updateTelemetry(telemetry, status, true);
-    }
     /**
      * Give the driver station a state of the union
      *
-     * @param telemetry
+     * @param telemetry Opmode telemetry
      */
-    public void updateTelemetry(Telemetry telemetry, String status, boolean showPosition) {
+    public void updateTelemetry(Telemetry telemetry, String status) {
 
         if (robot != null && field != null) {
             // Send telemetry message to signify robot context;
-            telemetry.addData("State:", status);
-            if (showPosition) {
-                telemetry.addData("Position", robot.getPosition());
-            }
+            telemetry.addData("State:", status + "bc: " + getBarcodeLevel());
+            telemetry.addData("Position", robot.getPosition());
             telemetry.addData("Arm", robot.getCappingArmStatus());
             telemetry.addData("Carousel", robot.getCarouselStatus());
+            telemetry.addData("Inout", robot.getInoutStatus());
+            telemetry.addData("TrajectoryErr", trajectoryError);
             updateDashBoard();
         }
         else {
@@ -192,5 +192,22 @@ public class Match {
         packet.put("theta", pose2d.getHeading());
 
         dashboard.sendTelemetryPacket(packet);
+    }
+
+
+    public String getTrajectoryError() {
+        return trajectoryError;
+    }
+
+    public void setTrajectoryError(String lastError) {
+        this.trajectoryError = lastError;
+    }
+
+    public int getBarcodeLevel() {
+        return barcodeLevel;
+    }
+
+    public void setBarcodeLevel(int barcodeLevel) {
+        this.barcodeLevel = barcodeLevel;
     }
 }

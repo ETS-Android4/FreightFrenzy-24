@@ -20,11 +20,13 @@ public class CappingArm {
     }
 
     public void raiseArm() {
+        this.motor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         this.motor.setTargetPosition(this.motor.getCurrentPosition() + RobotConfig.ARM_MOTOR_INCREMENT);
         this.motor.setPower(1);
     }
 
     public void lowerArm() {
+        this.motor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         this.motor.setTargetPosition(this.motor.getCurrentPosition() - RobotConfig.ARM_MOTOR_INCREMENT);
         this.motor.setPower(1);
     }

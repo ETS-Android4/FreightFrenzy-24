@@ -24,8 +24,11 @@ package org.firstinspires.ftc.teamcode.opmodes.drivercontrolled;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
 import org.firstinspires.ftc.teamcode.robot.components.vision.OpenCVWebcam;
+import org.opencv.core.Scalar;
 
-@TeleOp(name = "Phoebe: Object Finder", group = "Phoebe")
+import java.util.Locale;
+
+@TeleOp(name = "Phoebe: Freight Finder", group = "Phoebe")
 
 public class ObjectFinderTeleOp extends DriverControlledOperation {
     OpenCVWebcam webcam;
@@ -35,18 +38,21 @@ public class ObjectFinderTeleOp extends DriverControlledOperation {
     public void init() {
         super.init();
         webcam = robot.getWebcam();
-        webcam.init(hardwareMap, telemetry, OpenCVWebcam.BOX_COLOR_MIN, OpenCVWebcam.BOX_COLOR_MAX);
+    }
+    public void startStreaming(Scalar colorMin, Scalar colorMax) {
+        webcam.init(hardwareMap, telemetry, colorMin, colorMax);
+    }
+    @Override
+    public void start() {
+        startStreaming(OpenCVWebcam.BOX_COLOR_MIN, OpenCVWebcam.BOX_COLOR_MAX);
     }
     @Override
     public void loop() {
         if (webcam.seeingObject()) {
-            telemetry.addData("Distance", webcam.getDistanceToObjectFromCamera());
-            telemetry.addData("Focal Length (at 24 inches)", (webcam.getMaxY() - webcam.getMinY()) * 24 / 5);
-            telemetry.addData("Camera-Ring position", webcam.getRelativeObjectPosition());
-            telemetry.addData("Center-position", webcam.getDistanceToObjectFromCenter()
-                    + "@" + Math.toDegrees(webcam.getAngleToObjectFromCenter()));
+            telemetry.addData("Object", String.format(Locale.getDefault(), "%d-%d, %d-%d",
+                    webcam.getMinX(), webcam.getMaxX(), webcam.getMinY(), webcam.getMaxY())
+            );
         }
-        telemetry.addData("Robot position", robot.getPosition());
         telemetry.addData("Bounds", webcam.getBounds());
 
         telemetry.update();

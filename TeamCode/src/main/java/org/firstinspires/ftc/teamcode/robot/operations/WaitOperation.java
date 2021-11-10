@@ -30,11 +30,9 @@ public class WaitOperation extends Operation {
 
     @Override
     public void startOperation() {
-
     }
 
     @Override
     public void abortOperation() {
-
     }
 }

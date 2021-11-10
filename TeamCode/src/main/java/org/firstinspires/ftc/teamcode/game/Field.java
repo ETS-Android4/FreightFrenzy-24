@@ -1,6 +1,8 @@
 package org.firstinspires.ftc.teamcode.game;
 
 import com.acmerobotics.roadrunner.geometry.Pose2d;
+import com.acmerobotics.roadrunner.geometry.Vector2d;
+import com.acmerobotics.roadrunner.trajectory.Trajectory;
 import com.arcrobotics.ftclib.geometry.Rotation2d;
 import com.qualcomm.robotcore.util.RobotLog;
 
@@ -27,19 +29,17 @@ public class Field {
     public enum StartingPosition {
         LEFT, RIGHT
     }
-    public static final double ROBOT_STARTING_X =
-            -(Field.FIELD_WIDTH/2 - MecanumDriveTrain.DRIVE_TRAIN_LENGTH/2 - 2*Field.MM_PER_INCH);
     public static final Pose2d[][] startingPoses = new Pose2d[Alliance.Color.values().length][StartingPosition.values().length];
     {
         startingPoses[Alliance.Color.RED.ordinal()][StartingPosition.LEFT.ordinal()] =
                 new Pose2d(
-                        (-Field.TILE_WIDTH - RobotConfig.WIDTH/2)/MM_PER_INCH,
-                        (-Field.FIELD_WIDTH/2+RobotConfig.LENGTH/2)/MM_PER_INCH,
+                        (-2*Field.TILE_WIDTH + RobotConfig.WIDTH/2)/MM_PER_INCH,
+                        (-Field.FIELD_WIDTH/2 + RobotConfig.LENGTH/2)/MM_PER_INCH,
                         Math.toRadians(90));
         startingPoses[Alliance.Color.RED.ordinal()][StartingPosition.RIGHT.ordinal()] =
                 new Pose2d(
                         (RobotConfig.WIDTH/2)/MM_PER_INCH,
-                        (-Field.FIELD_WIDTH/2+RobotConfig.LENGTH)/2/MM_PER_INCH,
+                        (-Field.FIELD_WIDTH/2 + RobotConfig.LENGTH/2)/MM_PER_INCH,
                         Math.toRadians(90));
         startingPoses[Alliance.Color.BLUE.ordinal()][StartingPosition.LEFT.ordinal()] =
                 new Pose2d(
@@ -48,43 +48,113 @@ public class Field {
                         Math.toRadians(-90));
         startingPoses[Alliance.Color.BLUE.ordinal()][StartingPosition.RIGHT.ordinal()] =
                 new Pose2d(
-                        (-Field.TILE_WIDTH - RobotConfig.WIDTH/2)/MM_PER_INCH,
+                        (-2*Field.TILE_WIDTH + RobotConfig.WIDTH/2)/MM_PER_INCH,
                         (Field.FIELD_WIDTH/2-RobotConfig.LENGTH/2)/MM_PER_INCH,
                         Math.toRadians(-90));
     }
+    public static final Pose2d[][] hubDeliveryPoses = new Pose2d[Alliance.Color.values().length][StartingPosition.values().length];
+    {
+        hubDeliveryPoses[Alliance.Color.RED.ordinal()][StartingPosition.LEFT.ordinal()] =
+                new Pose2d(
+                        -1.5*Field.TILE_WIDTH/MM_PER_INCH,
+                        -Field.TILE_WIDTH/MM_PER_INCH,
+                        Math.toRadians(180));
+        hubDeliveryPoses[Alliance.Color.RED.ordinal()][StartingPosition.RIGHT.ordinal()] =
+                new Pose2d(
+                        0,
+                        -2*Field.TILE_WIDTH/MM_PER_INCH,
+                        Math.toRadians(135));
+        hubDeliveryPoses[Alliance.Color.BLUE.ordinal()][StartingPosition.LEFT.ordinal()] =
+                new Pose2d(
+                        0,
+                        2*Field.TILE_WIDTH/MM_PER_INCH,
+                        Math.toRadians(-135));
+        hubDeliveryPoses[Alliance.Color.BLUE.ordinal()][StartingPosition.RIGHT.ordinal()] =
+                new Pose2d(
+                        -1.5*Field.TILE_WIDTH/MM_PER_INCH,
+                        Field.TILE_WIDTH/MM_PER_INCH,
+                        Math.toRadians(0));
+    }
+    public static final Pose2d[] spinningPoses = new Pose2d[Alliance.Color.values().length];
+    {
+        spinningPoses[Alliance.Color.RED.ordinal()] =
+                new Pose2d(
+                        -56,
+                        -56,
+                        Math.toRadians(225));
+        spinningPoses[Alliance.Color.BLUE.ordinal()] =
+                new Pose2d(
+                        -56,
+                        56,
+                        Math.toRadians(135));
+    }
+    public static Trajectory reachHubTrajectory;
+    public static Trajectory reachCarouselTrajectory;
+    public static Trajectory navigateTrajectory;
+
     private Pose2d startingPose;
 
     public void init(Alliance.Color alliance, StartingPosition startingPosition) {
         startingPose = startingPoses[alliance.ordinal()][startingPosition.ordinal()];
         Thread initThread = new Thread(() -> {
             RobotLog.i("SilverTitans: Field initialization started");
-/*
-            //Red-right first wobble trajectories
-            dropFirstWobbleTrajectories[RingCount.NONE.ordinal()] =
-                    new TrajectoryBuilder(
-                            STARTING_POSE,
-                            PhoebeRoadRunnerDrive.fastVelocityConstraint, PhoebeRoadRunnerDrive.accelerationConstraint)
-                            .splineToConstantHeading(new Vector2d(-24, NONE_DEPOSIT_POSE_FIRST.getY()), 0)
-                            .splineToConstantHeading(NONE_DEPOSIT_POSE_FIRST.vec(), 0)
+            if (alliance == Alliance.Color.RED) {
+                if (startingPosition == StartingPosition.LEFT) {
+                    reachCarouselTrajectory =
+                            MecanumDriveTrain.trajectoryBuilder(startingPoses[alliance.ordinal()][startingPosition.ordinal()])
+                                    .splineToLinearHeading(spinningPoses[alliance.ordinal()], 0).build();
+                    reachHubTrajectory =
+                            MecanumDriveTrain.trajectoryBuilder(reachCarouselTrajectory.end(), true)
+                                    .splineTo(new Vector2d(-54.0, -24.0), Math.toRadians(0.0))
+                                    .splineTo(new Vector2d(-36.0, -24.0), 0)
+                                    .build();
+                    navigateTrajectory = MecanumDriveTrain.trajectoryBuilder(reachHubTrajectory.end())
+                            .splineToConstantHeading(new Vector2d(-48.0, -24.0), Math.toRadians(180.0))
+                            .splineToConstantHeading(new Vector2d(-60.0, -35.5), Math.toRadians(180.0))
                             .build();
-            dropFirstWobbleTrajectories[RingCount.ONE.ordinal()] =
-                    new TrajectoryBuilder(
-                            STARTING_POSE, PhoebeRoadRunnerDrive.fastVelocityConstraint, PhoebeRoadRunnerDrive.accelerationConstraint)
-                            .splineToConstantHeading(new Vector2d(-24, NONE_DEPOSIT_POSE_FIRST.getY()), 0)
-                            .splineToConstantHeading(ONE_DEPOSIT_POSE_FIRST.vec(), 0)
+                }
+                else {
+                    reachHubTrajectory =
+                            MecanumDriveTrain.trajectoryBuilder(startingPoses[alliance.ordinal()][startingPosition.ordinal()])
+                                    .splineToConstantHeading(new Vector2d(-12.0, -48.0), Math.toRadians(90.0))
+                                    .build();
+                    navigateTrajectory = MecanumDriveTrain.trajectoryBuilder(reachHubTrajectory.end())
+                            .splineTo(new Vector2d(0.0, -49.0), Math.toRadians(0.0))
+                            .splineTo(new Vector2d(30.0, -45.75), 0.0)
+                            .splineTo(new Vector2d(60.0, -45.75), 0.0)
                             .build();
-            dropFirstWobbleTrajectories[RingCount.FOUR.ordinal()] =
-                    new TrajectoryBuilder(
-                             STARTING_POSE, PhoebeRoadRunnerDrive.fastVelocityConstraint, PhoebeRoadRunnerDrive.accelerationConstraint)
-                            .splineToConstantHeading(new Vector2d(-24, NONE_DEPOSIT_POSE_FIRST.getY()), 0)
-                            .splineToConstantHeading(FOUR_DEPOSIT_POSE_FIRST.vec(), 0)
+                }
+            }
+            if (alliance == Alliance.Color.BLUE) {
+                if (startingPosition == StartingPosition.RIGHT) {
+                    reachCarouselTrajectory =
+                            MecanumDriveTrain.trajectoryBuilder(startingPoses[alliance.ordinal()][startingPosition.ordinal()])
+                                    .splineToLinearHeading(spinningPoses[alliance.ordinal()], 0).build();
+                    reachHubTrajectory =
+                            MecanumDriveTrain.trajectoryBuilder(reachCarouselTrajectory.end(), true)
+                                    .splineTo(new Vector2d(-54.0, 24.0), Math.toRadians(0.0))
+                                    .splineTo(new Vector2d(-36.0, 24.0), 0)
+                                    .build();
+                    navigateTrajectory = MecanumDriveTrain.trajectoryBuilder(reachHubTrajectory.end())
+                            .splineToConstantHeading(new Vector2d(-48.0, 24.0), Math.toRadians(180.0))
+                            .splineToConstantHeading(new Vector2d(-60.0, 35.5), Math.toRadians(180.0))
                             .build();
-            RobotLog.i("SilverTitans: Created drop first wobble trajectories");
+                }
+                else {
+                    reachHubTrajectory =
+                            MecanumDriveTrain.trajectoryBuilder(startingPoses[alliance.ordinal()][startingPosition.ordinal()])
+                                    .splineToConstantHeading(new Vector2d(-12.0, 48.0), Math.toRadians(-90.0))
+                                    .build();
+                    navigateTrajectory = MecanumDriveTrain.trajectoryBuilder(reachHubTrajectory.end())
+                            .splineTo(new Vector2d(0.0, 49.0), Math.toRadians(0.0))
+                            .splineTo(new Vector2d(30.0, 45.75), 0.0)
+                            .splineTo(new Vector2d(60.0, 45.75), 0.0)
+                            .build();
+                }
+            }
 
- */
             synchronized (mutex) {
                 initialized = true;
-                RobotLog.i("SilverTitans: Field initialization completed");
             }
         });
         initThread.start();
@@ -96,19 +166,33 @@ public class Field {
         }
     }
 
-    public void generateTrajectories() {
-        Thread initThread = new Thread(() -> {
-        });
-        initThread.start();
+    /**
+     * Convert from the poses used by the RoadRunner library to those used by the T265 Camera.
+     * The units of measure of the x and y coordinates in the T265 Camera are meters
+     * while those of RoadRunner library are inches. The headings are in radians in both cases.
+     *
+     * @param roadRunnerPose
+     * @return
+     */
+    public static com.arcrobotics.ftclib.geometry.Pose2d roadRunnerToCameraPose(Pose2d roadRunnerPose) {
+        return new com.arcrobotics.ftclib.geometry.Pose2d
+                    (roadRunnerPose.getX()*M_PER_INCH, roadRunnerPose.getY()*M_PER_INCH,
+                new Rotation2d(roadRunnerPose.getHeading()));
     }
 
-    public static com.arcrobotics.ftclib.geometry.Pose2d roadRunnerToCameraPose(Pose2d pose) {
-        return new com.arcrobotics.ftclib.geometry.Pose2d(pose.getX()*M_PER_INCH, pose.getY()*M_PER_INCH,
-                new Rotation2d(pose.getHeading()+Math.PI));
-    }
-    public static Pose2d cameraToRoadRunnerPose(com.arcrobotics.ftclib.geometry.Pose2d pose) {
-        return new Pose2d(pose.getTranslation().getX()/M_PER_INCH, pose.getTranslation().getY()/M_PER_INCH,
-                pose.getHeading()+Math.PI);
+    /**
+     * Convert from the poses used by the T265 Camera and those used by the RoadRunner library.
+     * The units of measure of the x and y coordinates in the T265 Camera are meters
+     * while those of RoadRunner library are inches. The headings are in radians in both cases.
+     *
+     * @param cameraPose
+     * @return
+     */
+    public static Pose2d cameraToRoadRunnerPose(com.arcrobotics.ftclib.geometry.Pose2d cameraPose) {
+        return new Pose2d(
+                    cameraPose.getTranslation().getX()/M_PER_INCH,
+                    cameraPose.getTranslation().getY()/M_PER_INCH,
+                cameraPose.getHeading());
     }
 
     public Pose2d getStartingPose() {

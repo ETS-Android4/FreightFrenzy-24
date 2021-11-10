@@ -32,14 +32,15 @@ import java.util.Date;
 public class MecanumDriveTrain extends PhoebeRoadRunnerDrive {
     //Define constants that help us move appropriate inches based on our drive configuration
     public static final double     COUNTS_PER_MOTOR_REV    = 537.6 ;    // eg: Rev 20:1 Motor Encoder
+    public static final double MAX_RPM = 312.5;
     //public static final double     COUNTS_PER_MOTOR_REV    = 1120 ;    // eg: Rev 40:1 Motor Encoder
     //public static final double     COUNTS_PER_MOTOR_REV    = 280 ;    // eg: Rev Hex Motor Encoder
     private static final double     WHEEL_RADIUS   = 50;     // For figuring circumference (mm)
     private static  final double     COUNTS_PER_MM = COUNTS_PER_MOTOR_REV  /
             (WHEEL_RADIUS  * Math.PI * 2);
     //our drive train width is 14 inches
-    public static final double DRIVE_TRAIN_WIDTH = 14.375* Field.MM_PER_INCH; //14 3/8inches
-    public static final double DRIVE_TRAIN_LENGTH = 13* Field.MM_PER_INCH; //13 inches
+    public static final double DRIVE_TRAIN_WIDTH = 16* Field.MM_PER_INCH; //14 3/8inches
+    public static final double DRIVE_TRAIN_LENGTH = 13.75* Field.MM_PER_INCH; //13 inches
     public static final double ARC_LENGTH_PER_DEGREE = 2 * Math.PI * (Math.hypot(DRIVE_TRAIN_LENGTH, DRIVE_TRAIN_WIDTH) / 2) / 360;
     public static final double TRAVEL_LENGTH_PER_TURN_DEGREE = 2 * Math.PI * (Math.hypot(DRIVE_TRAIN_LENGTH/2, DRIVE_TRAIN_WIDTH)) / 360;
 
@@ -48,8 +49,6 @@ public class MecanumDriveTrain extends PhoebeRoadRunnerDrive {
     public static final double     P_DRIVE_COEFF           = 0.025;     // Larger is more responsive, but also less stable
 
     public static final int WITHIN_RANGE = 30;
-
-    public static final double ACCEPTABLE_ERROR = .75;
 
     public MecanumDriveTrain(HardwareMap hardwareMap, Telemetry telemetry, VslamCamera camera) {
         super(hardwareMap);

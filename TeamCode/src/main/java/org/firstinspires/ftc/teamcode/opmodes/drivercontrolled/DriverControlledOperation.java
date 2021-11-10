@@ -82,6 +82,7 @@ public class DriverControlledOperation extends OpMode {
         else {
             robot.setPattern(RevBlinkinLedDriver.BlinkinPattern.SHOT_BLUE);
         }
+        robot.startVSLAM();
 
         try {
             robot.setState("Initialized");

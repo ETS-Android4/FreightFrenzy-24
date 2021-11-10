@@ -18,12 +18,6 @@ public class FollowTrajectory extends Operation {
 
     protected Trajectory trajectory;
     MecanumDriveTrain driveTrain;
-    protected int correctionCount = DEFAULT_CORRECTION_COUNT, retries;
-
-    public FollowTrajectory(Trajectory trajectory, MecanumDriveTrain driveTrain, int retries, String title) {
-        this(trajectory, driveTrain, title);
-        this.correctionCount = retries;
-    }
 
     public FollowTrajectory(Trajectory trajectory, MecanumDriveTrain driveTrain, String title) {
         this.trajectory = trajectory;
@@ -32,10 +26,6 @@ public class FollowTrajectory extends Operation {
     }
     public void setTrajectory(Trajectory trajectory) {
         this.trajectory = trajectory;
-    }
-
-    public void setCorrectionCount(int correctionCount) {
-        this.correctionCount = correctionCount;
     }
 
     public String toString() {
@@ -47,28 +37,21 @@ public class FollowTrajectory extends Operation {
 
     public boolean isComplete() {
         driveTrain.update();
-        //Match.log("Trajectory position: " + driveTrain.getPoseEstimate().toString());
+        Pose2d currentPose = driveTrain.getPoseEstimate();
+        String error = getError(currentPose, trajectory);
+        Match.getInstance().setTrajectoryError(error);
         boolean busy = driveTrain.isBusy();
         if (!busy) {
-            driveTrain.update();
-            Pose2d currentPose = driveTrain.getPoseEstimate();
-            String error = getError(currentPose, trajectory, retries);
-            if (retries++ < correctionCount && (Math.abs(trajectory.end().getX()-currentPose.getX()) > MecanumDriveTrain.ACCEPTABLE_ERROR
-                || Math.abs(trajectory.end().getY()-currentPose.getY())  > MecanumDriveTrain.ACCEPTABLE_ERROR))
-            {
-                trajectory = driveTrain.accurateTrajectoryBuilder(currentPose)
-                        .splineToLinearHeading(trajectory.end(), 0)
-                        .build();
-                driveTrain.followTrajectory(trajectory);
-                Match.log("Correcting error: " + error + " after trajectory");
-                return false;
-            }
             Match.log(String.format("Finished trajectory %s with error %s, at %s",
                     this.title,
                     error,
                     currentPose.toString()));
-         }
-        return !busy;
+            return true;
+        }
+        else {
+            Match.log(error);
+            return false;
+        }
     }
 
     @Override
@@ -81,14 +64,17 @@ public class FollowTrajectory extends Operation {
         this.driveTrain.stop();
     }
 
-    public static String getError(Pose2d currentPose, Trajectory trajectory, int retries) {
-        return String.format("%.2f, %.2f, %.2f, retry: %d",
+    public static String getError(Pose2d currentPose, Trajectory trajectory) {
+        return String.format(Locale.getDefault(), "%.2f, %.2f, %.2f",
                         trajectory.end().getX()-currentPose.getX(),
                         trajectory.end().getY()-currentPose.getY(),
                         Math.toDegrees(
-                                AngleUnit.normalizeRadians(trajectory.end().getHeading())
-                                        - AngleUnit.normalizeRadians(currentPose.getHeading())),
-                        retries);
+                                AngleUnit.normalizeRadians(
+                                        trajectory.end().getHeading()
+                                        - currentPose.getHeading()
+                                )
+                        )
+        );
     }
 
     public Trajectory getTrajectory() {

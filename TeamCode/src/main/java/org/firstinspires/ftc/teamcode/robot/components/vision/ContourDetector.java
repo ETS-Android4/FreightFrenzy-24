@@ -1,7 +1,5 @@
 package org.firstinspires.ftc.teamcode.robot.components.vision;
 
-import android.util.Log;
-
 import org.firstinspires.ftc.teamcode.game.Field;
 import org.opencv.core.Core;
 import org.opencv.core.CvType;
@@ -75,7 +73,6 @@ public class ContourDetector {
 
         mLowerBound.val[3] = 0;
         mUpperBound.val[3] = 255;
-        Log.e(TAG, getBounds());
 
         Mat spectrumHsv = new Mat(1, (int)(maxHsvColor.val[0]-minHsvColor.val[0]), CvType.CV_8UC3);
 

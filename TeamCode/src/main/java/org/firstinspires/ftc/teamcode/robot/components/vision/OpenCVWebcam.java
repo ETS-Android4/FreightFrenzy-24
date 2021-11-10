@@ -24,7 +24,6 @@ package org.firstinspires.ftc.teamcode.robot.components.vision;
 import com.acmerobotics.roadrunner.geometry.Pose2d;
 import com.acmerobotics.roadrunner.geometry.Vector2d;
 import com.qualcomm.robotcore.hardware.HardwareMap;
-import com.qualcomm.robotcore.hardware.Servo;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
@@ -33,7 +32,6 @@ import org.firstinspires.ftc.teamcode.game.Match;
 import org.firstinspires.ftc.teamcode.robot.RobotConfig;
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfPoint;
-import org.opencv.core.Point;
 import org.opencv.core.Rect;
 import org.opencv.core.Scalar;
 import org.opencv.imgproc.Imgproc;
@@ -49,19 +47,19 @@ import java.util.List;
 public class OpenCVWebcam {
 
     public static final double CAMERA_OFFSET_FRONT = 6.5;
-    public static final double CAMERA_SERVO_FORWARD_POSITION = 0.51;
     public static final int FOCAL_LENGTH = 1500;
 
     public static final Scalar BOX_COLOR_MIN = new Scalar(12, 50, 50);
     public static final Scalar BOX_COLOR_MAX = new Scalar(22, 255, 255);
     public static final Scalar SILVER_COLOR_MIN = new Scalar(220, 0, 128);
     public static final Scalar SILVER_COLOR_MAX = new Scalar(255, 20, 220);
+    public static final Scalar ELEMENT_COLOR_MIN = new Scalar(100, 90, 50);
+    public static final Scalar ELEMENT_COLOR_MAX = new Scalar(160, 255, 255);
 
     public static final int Y_PIXEL_COUNT = 1920;
     public static final int X_PIXEL_COUNT = 1080;
 
     OpenCvWebcam webcam;
-    Servo cameraServo;
     Pipeline pipeline;
     Scalar colorMin;
     Scalar colorMax;
@@ -72,14 +70,6 @@ public class OpenCVWebcam {
         this.colorMin = colorMin;
         this.colorMax = colorMax;
         pipeline = new Pipeline();
-
-/*
-        cameraServo = hardwareMap.get(Servo.class, RobotConfig.CAMERA_SERVO);
-        cameraServo.setPosition(OpenCVWebcam.CAMERA_SERVO_FORWARD_POSITION);
-        Match.log("Initialized camera servo position");
-
- */
-
 
         int cameraMonitorViewId = hardwareMap.appContext.getResources().getIdentifier("cameraMonitorViewId", "id", hardwareMap.appContext.getPackageName());
         webcam = OpenCvCameraFactory.getInstance().createWebcam(hardwareMap.get(WebcamName.class, RobotConfig.WEBCAM_ID), cameraMonitorViewId);
@@ -243,6 +233,19 @@ public class OpenCVWebcam {
     public boolean seeingObject() {
         return pipeline.contourDetector.getLargestArea() > 0;
     }
+
+    public int getBarCodeLevel() {
+        if (seeingObject()) {
+            if (getMinX() > 1100) {
+                return 1;
+            }
+            else if (getMinX() > 600) {
+                return 2;
+            }
+        }
+        return 3;
+    }
+
     public class Pipeline extends OpenCvPipeline {
         Telemetry telemetry;
         public void setTelemetry(Telemetry telemetry) {
@@ -258,7 +261,7 @@ public class OpenCVWebcam {
         final Scalar SILVER = new Scalar(192, 192, 192);
 
         public ContourDetector contourDetector = new ContourDetector(colorMin, colorMax,
-                0, 480, 0, 1700);
+                860, 1080, 0, 1700);
 
         @Override
         public Mat processFrame(Mat input) {
@@ -269,12 +272,7 @@ public class OpenCVWebcam {
                 if (largestContour != null) {
                     List<MatOfPoint> largestContours = new ArrayList<>();
                     largestContours.add(largestContour);
-                    Imgproc.drawContours(input, largestContours, -1, BLUE, 2);
-                    ContourDetector silverDetector = new ContourDetector(OpenCVWebcam.SILVER_COLOR_MIN, OpenCVWebcam.SILVER_COLOR_MAX,
-                            contourDetector.minX, contourDetector.maxX, contourDetector.minY, contourDetector.maxY);
-                    List<MatOfPoint> silverContours = silverDetector.process(input);
-                    Imgproc.drawContours(input, silverContours, -1, RED, 3);
-                    Imgproc.putText(input, "Silver:" + silverContours.size(), new Point(100, 100), Imgproc.FONT_HERSHEY_COMPLEX, 4, SILVER);
+                    Imgproc.drawContours(input, largestContours, -1, RED, 10);
                 }
                 Rect limitsRectangle = contourDetector.getAreaOfInterest();
                 Imgproc.rectangle(input, limitsRectangle, RED, 6);

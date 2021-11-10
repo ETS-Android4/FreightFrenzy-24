@@ -60,16 +60,17 @@ import static org.firstinspires.ftc.teamcode.roadrunner.drive.DriveConstants.kV;
  */
 @Config
 public class PhoebeRoadRunnerDrive extends MecanumDrive {
-    public static PIDCoefficients TRANSLATIONAL_PID = new PIDCoefficients(4, 0, 0);
+    public static PIDCoefficients TRANSLATIONAL_PID = new PIDCoefficients(10, 0, 0.2);
     public static PIDCoefficients HEADING_PID = new PIDCoefficients(10, 0, 0);
 
     public static double LATERAL_MULTIPLIER = 1;
 
     public static double VX_WEIGHT = 1;
-    public static double VY_WEIGHT = 1.2;
+    public static double VY_WEIGHT = 1;
     public static double OMEGA_WEIGHT = 1;
 
     public static int POSE_HISTORY_LIMIT = 100;
+
     public static final TrajectoryVelocityConstraint fastVelocityConstraint = new MinVelocityConstraint(Arrays.asList(
             new AngularVelocityConstraint(50),
                 new MecanumVelocityConstraint(200, TRACK_WIDTH)
@@ -91,9 +92,7 @@ public class PhoebeRoadRunnerDrive extends MecanumDrive {
         FOLLOW_TRAJECTORY
     }
 
-    //private FtcDashboard dashboard;
     private NanoClock clock;
-
     private Mode mode;
 
     private PIDFController turnController;
@@ -130,7 +129,7 @@ public class PhoebeRoadRunnerDrive extends MecanumDrive {
         turnController.setInputBounds(0, 2 * Math.PI);
 
         follower = new HolonomicPIDVAFollower(TRANSLATIONAL_PID, TRANSLATIONAL_PID, HEADING_PID,
-                new Pose2d(0.1, 0.1, Math.toRadians(1)), .5);
+                new Pose2d(0.1, 0.1, Math.toRadians(1)), 2);
 
         poseHistory = new LinkedList<>();
 
@@ -166,23 +165,23 @@ public class PhoebeRoadRunnerDrive extends MecanumDrive {
         }
     }
 
-    public TrajectoryBuilder accurateTrajectoryBuilder(Pose2d startPose) {
+    public static TrajectoryBuilder accurateTrajectoryBuilder(Pose2d startPose) {
         return new TrajectoryBuilder(startPose, slowVelocityConstraint, accelerationConstraint);
     }
 
-    public TrajectoryBuilder accurateTrajectoryBuilder(Pose2d startPose, boolean reversed) {
+    public static TrajectoryBuilder accurateTrajectoryBuilder(Pose2d startPose, boolean reversed) {
         return new TrajectoryBuilder(startPose, reversed, slowVelocityConstraint, accelerationConstraint);
     }
 
-    public TrajectoryBuilder trajectoryBuilder(Pose2d startPose) {
+    public static TrajectoryBuilder trajectoryBuilder(Pose2d startPose) {
         return new TrajectoryBuilder(startPose, fastVelocityConstraint, accelerationConstraint);
     }
 
-    public TrajectoryBuilder trajectoryBuilder(Pose2d startPose, boolean reversed) {
+    public static TrajectoryBuilder trajectoryBuilder(Pose2d startPose, boolean reversed) {
         return new TrajectoryBuilder(startPose, reversed, fastVelocityConstraint, accelerationConstraint);
     }
 
-    public TrajectoryBuilder trajectoryBuilder(Pose2d startPose, double startHeading) {
+    public static TrajectoryBuilder trajectoryBuilder(Pose2d startPose, double startHeading) {
         return new TrajectoryBuilder(startPose, startHeading, fastVelocityConstraint, accelerationConstraint);
     }
 
@@ -397,6 +396,6 @@ public class PhoebeRoadRunnerDrive extends MecanumDrive {
 
     @Override
     public double getRawExternalHeading() {
-        return imu.getAngularOrientation().firstAngle;
+        return getLocalizer().getPoseEstimate().getHeading();
     }
 }

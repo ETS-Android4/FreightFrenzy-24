@@ -4,9 +4,9 @@ import org.firstinspires.ftc.teamcode.game.Alliance;
 import org.firstinspires.ftc.teamcode.game.Field;
 
 @com.qualcomm.robotcore.eventloop.opmode.Autonomous(name="BlueLeft", group="Phoebe")
-public class BlueLeft extends AutonomousHelper {
+public class BlueLeft extends RedRight {
     @Override
     public void init() {
-        super.init(Alliance.Color.BLUE, Field.StartingPosition.LEFT);
+        super.init(Alliance.Color.RED, Field.StartingPosition.RIGHT);
     }
 }
