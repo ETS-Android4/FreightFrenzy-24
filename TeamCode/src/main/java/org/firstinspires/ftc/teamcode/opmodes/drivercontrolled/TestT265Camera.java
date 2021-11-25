@@ -14,13 +14,13 @@ import com.spartronics4915.lib.T265Camera;
 
 import org.firstinspires.ftc.teamcode.game.Field;
 import org.firstinspires.ftc.teamcode.game.Match;
+import org.firstinspires.ftc.teamcode.roadrunner.drive.DriveConstants;
 import org.firstinspires.ftc.teamcode.robot.Robot;
-import org.firstinspires.ftc.teamcode.robot.components.drivetrain.MecanumDriveTrain;
 
 @TeleOp(name="Test T265", group="Phoebe")
 public class TestT265Camera extends OpMode
 {
-    public static final double T265_OFFSET_FRONT = MecanumDriveTrain.DRIVE_TRAIN_LENGTH/1000/2;
+    public static final double T265_OFFSET_FRONT = DriveConstants.TRACK_LENGTH/1000/2;
     public static final double  T265_CAMERA_OFFSET_LEFT = 0;
     public static final double T265_ROTATION = 180;
 
@@ -37,7 +37,7 @@ public class TestT265Camera extends OpMode
     public void init() {
         if (t265Camera == null) {
             t265Camera = new T265Camera(t265LocationOnRobot, 0.8, hardwareMap.appContext);
-            t265Camera.setPose(new Pose2d(new Translation2d(), new Rotation2d(Math.PI)));
+            t265Camera.setPose(new Pose2d());
             try {
                 t265Camera.start();
             }

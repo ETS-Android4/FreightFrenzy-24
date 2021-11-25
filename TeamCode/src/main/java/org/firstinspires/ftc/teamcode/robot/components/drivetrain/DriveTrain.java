@@ -7,97 +7,70 @@ import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.util.Range;
 import com.qualcomm.robotcore.util.RobotLog;
 
-import org.firstinspires.ftc.robotcore.external.Telemetry;
-import org.firstinspires.ftc.teamcode.game.Field;
 import org.firstinspires.ftc.teamcode.game.Match;
-import org.firstinspires.ftc.teamcode.roadrunner.drive.PhoebeRoadRunnerDrive;
+import org.firstinspires.ftc.teamcode.roadrunner.drive.DriveConstants;
+import org.firstinspires.ftc.teamcode.roadrunner.drive.SampleMecanumDrive;
 import org.firstinspires.ftc.teamcode.robot.components.vision.VslamCamera;
 import org.firstinspires.ftc.teamcode.robot.operations.BearingOperation;
-import org.firstinspires.ftc.teamcode.robot.operations.ClockwiseRotationOperation;
-import org.firstinspires.ftc.teamcode.robot.operations.DistanceInDirectionOperation;
 import org.firstinspires.ftc.teamcode.robot.operations.DistanceOperation;
-import org.firstinspires.ftc.teamcode.robot.operations.DriveForTimeOperation;
 import org.firstinspires.ftc.teamcode.robot.operations.DriveToPositionOperation;
 import org.firstinspires.ftc.teamcode.robot.operations.FollowTrajectory;
 import org.firstinspires.ftc.teamcode.robot.operations.StrafeLeftForDistanceOperation;
 import org.firstinspires.ftc.teamcode.robot.operations.StrafeLeftForDistanceWithHeadingOperation;
-import org.firstinspires.ftc.teamcode.robot.operations.TurnOperation;
 
 import java.util.Date;
+import java.util.Locale;
 
 /**
  * Created by Silver Titans on 10/26/17.
  */
 
-public class MecanumDriveTrain extends PhoebeRoadRunnerDrive {
-    //Define constants that help us move appropriate inches based on our drive configuration
-    public static final double     COUNTS_PER_MOTOR_REV    = 537.6 ;    // eg: Rev 20:1 Motor Encoder
-    public static final double MAX_RPM = 312.5;
-    //public static final double     COUNTS_PER_MOTOR_REV    = 1120 ;    // eg: Rev 40:1 Motor Encoder
-    //public static final double     COUNTS_PER_MOTOR_REV    = 280 ;    // eg: Rev Hex Motor Encoder
-    private static final double     WHEEL_RADIUS   = 50;     // For figuring circumference (mm)
-    private static  final double     COUNTS_PER_MM = COUNTS_PER_MOTOR_REV  /
-            (WHEEL_RADIUS  * Math.PI * 2);
-    //our drive train width is 14 inches
-    public static final double DRIVE_TRAIN_WIDTH = 16* Field.MM_PER_INCH; //14 3/8inches
-    public static final double DRIVE_TRAIN_LENGTH = 13.75* Field.MM_PER_INCH; //13 inches
-    public static final double ARC_LENGTH_PER_DEGREE = 2 * Math.PI * (Math.hypot(DRIVE_TRAIN_LENGTH, DRIVE_TRAIN_WIDTH) / 2) / 360;
-    public static final double TRAVEL_LENGTH_PER_TURN_DEGREE = 2 * Math.PI * (Math.hypot(DRIVE_TRAIN_LENGTH/2, DRIVE_TRAIN_WIDTH)) / 360;
-
-    public static final double     HEADING_THRESHOLD       = 1 ;      // As tight as we can make it
-    public static final double     P_TURN_COEFF            = 1;     // Larger is more responsive, but also less stable
-    public static final double     P_DRIVE_COEFF           = 0.025;     // Larger is more responsive, but also less stable
-
+public class DriveTrain extends SampleMecanumDrive {
     public static final int WITHIN_RANGE = 30;
+    public static final double     P_TURN_COEFFICIENT            = 1;     // Larger is more responsive, but also less stable
+    public static final double P_DRIVE_COEFFICIENT = 0.025;     // Larger is more responsive, but also less stable
 
-    public MecanumDriveTrain(HardwareMap hardwareMap, Telemetry telemetry, VslamCamera camera) {
+    public DriveTrain(HardwareMap hardwareMap, VslamCamera camera) {
         super(hardwareMap);
         super.setLocalizer(camera);
     }
 
-    /** Set power of left motor
+    /** Set power of left front motor
      *
-     * @param power
+     * @param power - the power to set
      *
      */
     public void setLeftFrontPower(double power) {
-        leftFront.setPower(power);
+        super.leftFront.setPower(power);
     }
 
     /**
-     * Set power of right motor
-     * @param power
+     * Set power of right front motor
+     * @param power - the power to set
      */
     public void setRightFrontPower(double power) {
-        this.rightFront.setPower(power);
+        super.rightFront.setPower(power);
     }
 
-    /** Set power of left motor
+    /** Set power of left rear motor
      *
-     * @param power
+     * @param power - the power to set
      *
      */
     public void setLeftRearPower(double power) {
-        this.leftRear.setPower(power);
+        super.leftRear.setPower(power);
     }
 
     /**
-     * Set power of right motor
-     * @param power
+     * Set power of right rear motor
+     * @param power - the power to set
      */
     public void setRightRearPower(double power) {
-        this.rightRear.setPower(power);
-    }
-
-
-    public void handleOperation(DriveForTimeOperation operation) {
-        stop();
+        super.rightRear.setPower(power);
     }
 
     public void handleOperation(FollowTrajectory trajectoryOperation) {
-        update();
         Pose2d currentPose = getPoseEstimate();
-        setPoseEstimate(currentPose);
         Match.log("Starting " + trajectoryOperation.getTitle() + ": "  + trajectoryOperation.getTrajectory().start() + "->" + trajectoryOperation.getTrajectory().end()
                 + " at " + currentPose);
         super.followTrajectoryAsync(trajectoryOperation.getTrajectory());
@@ -105,12 +78,10 @@ public class MecanumDriveTrain extends PhoebeRoadRunnerDrive {
 
     public void handleOperation (DriveToPositionOperation operation) {
         try {
-            update();
             Pose2d currentPose = getPoseEstimate();
-            setPoseEstimate(currentPose);
             Date start = new Date();
             Thread createTrajectoryThread = new Thread(() -> {
-                Trajectory trajectory = accurateTrajectoryBuilder(currentPose)
+                Trajectory trajectory = trajectoryBuilder(currentPose)
                         .splineToLinearHeading(operation.getDesiredPose(), operation.getDesiredPose().getHeading())
                         .build();
                 Match.log("Starting " + operation.getTitle() + ": " + trajectory.start() + "->" + trajectory.end()
@@ -131,6 +102,36 @@ public class MecanumDriveTrain extends PhoebeRoadRunnerDrive {
         }
     }
 
+    public void handleOperation (BearingOperation operation) {
+        try {
+            Pose2d currentPose = getPoseEstimate();
+            Pose2d desiredPose =
+                    currentPose.minus(
+                            new Pose2d(0,
+                                    0,
+                                    currentPose.getHeading()-operation.getDesiredBearing()));
+            Date start = new Date();
+            Thread createTrajectoryThread = new Thread(() -> {
+                Trajectory trajectory = trajectoryBuilder(currentPose)
+                        .splineToLinearHeading(desiredPose, desiredPose.getHeading())
+                        .build();
+                Match.log("Starting " + operation.getTitle() + ": " + trajectory.start() + "->" + trajectory.end()
+                        + " at " + currentPose + ", build took " + (new Date().getTime() - start.getTime()) + " mSecs");
+                //set trajectory in operation
+                operation.setTrajectory(trajectory);
+                //start following trajectory
+                super.followTrajectoryAsync(trajectory);
+                //mark that trajectory has been started
+                operation.setTrajectoryStarted(true);
+            });
+            createTrajectoryThread.start();
+        }
+        catch (Throwable e) {
+            Match.log("Error starting drive to position");
+            RobotLog.logStackTrace(e);
+            operation.setAborted(true);
+        }
+    }
     /**
      * Handle operation to drive for the specified distance in the direction the robot is facing
      * @param operation
@@ -141,7 +142,7 @@ public class MecanumDriveTrain extends PhoebeRoadRunnerDrive {
      */
     public void handleOperation(DistanceOperation operation) {
         stop();
-        int encoderChange = (int) (operation.getDistance() * COUNTS_PER_MM);
+        int encoderChange = DriveConstants.mmToEncoderTicks(operation.getDistance());
         this.leftFront.setTargetPosition(leftFront.getCurrentPosition() + encoderChange);
         this.rightFront.setTargetPosition(rightFront.getCurrentPosition() + encoderChange);
         this.leftRear.setTargetPosition(leftRear.getCurrentPosition() + encoderChange);
@@ -158,20 +159,6 @@ public class MecanumDriveTrain extends PhoebeRoadRunnerDrive {
         this.rightRear.setPower(operation.getSpeed());
     }
 
-    public void handleOperation (DistanceInDirectionOperation operation) {
-        stop();
-        int encoderChange = (int) (operation.getDistance() * COUNTS_PER_MM);
-        this.leftFront.setTargetPosition(leftFront.getCurrentPosition() + encoderChange);
-        this.rightFront.setTargetPosition(rightFront.getCurrentPosition() + encoderChange);
-        this.leftRear.setTargetPosition(leftRear.getCurrentPosition() + encoderChange);
-        this.rightRear.setTargetPosition(rightRear.getCurrentPosition() + encoderChange);
-
-        this.leftFront.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        this.rightFront.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        this.leftRear.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        this.rightRear.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-    }
-
     /**
      * Handle operation to strafe left for the specified distance perpendicular to the direction the robot is facing
      * @param operation
@@ -185,7 +172,7 @@ public class MecanumDriveTrain extends PhoebeRoadRunnerDrive {
      */
     public void handleOperation(StrafeLeftForDistanceOperation operation) {
         stop();
-        int encoderChange = (int) (operation.getDistance() * COUNTS_PER_MM * 1.05);
+        int encoderChange = DriveConstants.mmToEncoderTicks(operation.getDistance() * 1.05);
         this.leftFront.setTargetPosition(leftFront.getCurrentPosition() - encoderChange);
         this.rightFront.setTargetPosition(rightFront.getCurrentPosition() + encoderChange);
         this.leftRear.setTargetPosition(leftRear.getCurrentPosition() + encoderChange);
@@ -215,7 +202,7 @@ public class MecanumDriveTrain extends PhoebeRoadRunnerDrive {
      */
     public void handleOperation(StrafeLeftForDistanceWithHeadingOperation operation) {
         stop();
-        int encoderChange = (int) (operation.getDistance() * COUNTS_PER_MM * 1.05);
+        int encoderChange = DriveConstants.mmToEncoderTicks(operation.getDistance() * 1.05);
         this.leftFront.setTargetPosition(leftFront.getCurrentPosition() - encoderChange);
         this.rightFront.setTargetPosition(rightFront.getCurrentPosition() + encoderChange);
         this.leftRear.setTargetPosition(leftRear.getCurrentPosition() + encoderChange);
@@ -227,73 +214,6 @@ public class MecanumDriveTrain extends PhoebeRoadRunnerDrive {
         this.rightRear.setMode(DcMotor.RunMode.RUN_TO_POSITION);
     }
 
-    /**
-     * Handle operation to rotate the robot for the specified degrees
-     * @param operation
-     *
-     * We do this by computing how much each wheel must be rotated to travel on the circumference of
-     * the circle the wheels would describe if the left ones are propelling the robot forward
-     * and the right ones are propelling the robot backwards
-     *
-     */
-
-    public void handleOperation(ClockwiseRotationOperation operation) {
-        stop();
-
-        double arcLength =
-                ARC_LENGTH_PER_DEGREE * operation.getDegrees();
-        int encoderChange = (int) (arcLength * COUNTS_PER_MM);
-        this.leftFront.setTargetPosition(leftFront.getCurrentPosition() + encoderChange);
-        this.rightFront.setTargetPosition(rightFront.getCurrentPosition() - encoderChange);
-        this.leftRear.setTargetPosition(leftRear.getCurrentPosition() + encoderChange);
-        this.rightRear.setTargetPosition(rightRear.getCurrentPosition() - encoderChange);
-
-        this.leftFront.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        this.rightFront.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        this.leftRear.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        this.rightRear.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-
-        this.leftFront.setPower(operation.getSpeed());
-        this.rightFront.setPower(operation.getSpeed());
-        this.leftRear.setPower(operation.getSpeed());
-        this.rightRear.setPower(operation.getSpeed());
-    }
-
-    public void handleOperation(TurnOperation operation) {
-        stop();
-
-        double arcLength =
-                TRAVEL_LENGTH_PER_TURN_DEGREE * operation.getDegrees();
-        int encoderChange = (int) (arcLength * COUNTS_PER_MM);
-        if (operation.getDirection() == TurnOperation.Direction.RIGHT) {
-            this.leftFront.setTargetPosition(leftFront.getCurrentPosition() + encoderChange);
-            this.leftRear.setTargetPosition(leftRear.getCurrentPosition() + encoderChange);
-
-            this.leftFront.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-            this.leftRear.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-
-            this.leftFront.setPower(operation.getSpeed());
-            this.leftRear.setPower(operation.getSpeed());
-            this.rightFront.setPower(0);
-            this.rightRear.setPower(0);
-        }
-        else {
-            this.rightFront.setTargetPosition(leftFront.getCurrentPosition() + encoderChange);
-            this.rightRear.setTargetPosition(leftRear.getCurrentPosition() + encoderChange);
-
-            this.rightFront.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-            this.rightRear.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-
-            this.rightFront.setPower(operation.getSpeed());
-            this.rightRear.setPower(operation.getSpeed());
-            this.leftFront.setPower(0);
-            this.leftRear.setPower(0);
-        }
-    }
-
-    public void handleOperation(BearingOperation operation) {
-        stop();
-    }
 
     private boolean withinRange(DcMotor... motors) {
         for (DcMotor motor: motors) {
@@ -310,25 +230,9 @@ public class MecanumDriveTrain extends PhoebeRoadRunnerDrive {
 
     }
 
-    public boolean leftWithinRange() {
-        if (withinRange(leftRear, leftFront)) {
-            stop();
-            return true;
-        }
-        return false;
-    }
-
-    public boolean rightWithinRange() {
-        if (withinRange(rightRear, rightFront)) {
-            stop();
-            return true;
-        }
-        return false;
-    }
-
     /**
      * Check if the drive train is within the specified encoder count
-     * @return
+     * @return - true if the drive train is within encoder tolerance
      */
     public boolean driveTrainWithinRange() {
         if (withinRange())
@@ -354,7 +258,8 @@ public class MecanumDriveTrain extends PhoebeRoadRunnerDrive {
     }
 
     public String getStatus() {
-        return String.format("LF(%s):%.2f(%d>%d),RF:%.2f(%d>%d),LR:%.2f(%d>%d),RR:%.2f(%d>%d)",
+        return String.format(Locale.getDefault(),
+                "LF(%s):%.2f(%d>%d),RF:%.2f(%d>%d),LR:%.2f(%d>%d),RR:%.2f(%d>%d)",
             this.leftFront.getDirection().toString(),
             this.leftFront.getPower(), this.leftFront.getCurrentPosition(), this.leftFront.getTargetPosition(),
             this.rightFront.getPower(), this.rightFront.getCurrentPosition(), this.rightFront.getTargetPosition(),
@@ -362,26 +267,22 @@ public class MecanumDriveTrain extends PhoebeRoadRunnerDrive {
             this.rightRear.getPower(), this.rightRear.getCurrentPosition(), this.rightRear.getTargetPosition());
     }
 
-    public static void setMode(DcMotor motor, DcMotor.RunMode mode) {
-        motor.setMode(mode);
-    }
-
     /**
      * returns desired steering force.  +/- 1 range.  +ve = steer left
      * @param error   Error angle in robot relative degrees
-     * @param PCoeff  Proportional Gain Coefficient
-     * @return
+     * @param coefficient  Proportional Gain Coefficient
+     * @return - desired steering force
      */
-    public static double getSteer(double error, double PCoeff) {
-        return Range.clip(error * PCoeff, -1, 1);
+    public static double getSteer(double error, double coefficient) {
+        return Range.clip(error * coefficient, -1, 1);
     }
 
     /**
      * Drive in the specified direction at the specified speed while rotating at the specified rotation
      * Direction is relative to the robot
-     * @param direction
-     * @param speed
-     * @param rotation
+     * @param direction - direction to drive
+     * @param speed - speed at which to drive
+     * @param rotation - how much to rotate while driving
      */
     public void drive(double direction, double speed, double rotation) {
         double sin = Math.sin(direction + Math.PI / 4.0);

@@ -1,7 +1,7 @@
 package org.firstinspires.ftc.teamcode.robot.operations;
 
 import org.firstinspires.ftc.teamcode.game.Field;
-import org.firstinspires.ftc.teamcode.robot.components.drivetrain.MecanumDriveTrain;
+import org.firstinspires.ftc.teamcode.robot.components.drivetrain.DriveTrain;
 
 import java.util.Locale;
 
@@ -12,9 +12,9 @@ import java.util.Locale;
 public class StrafeLeftForDistanceOperation extends Operation {
     private double distance;
     private double speed;
-    MecanumDriveTrain driveTrain;
+    DriveTrain driveTrain;
 
-    public StrafeLeftForDistanceOperation(double distance, double speed, MecanumDriveTrain driveTrain, String title) {
+    public StrafeLeftForDistanceOperation(double distance, double speed, DriveTrain driveTrain, String title) {
         this.distance = distance;
         this.speed = speed;
         this.driveTrain = driveTrain;

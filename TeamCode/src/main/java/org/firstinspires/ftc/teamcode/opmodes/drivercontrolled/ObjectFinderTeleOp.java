@@ -26,8 +26,6 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import org.firstinspires.ftc.teamcode.robot.components.vision.OpenCVWebcam;
 import org.opencv.core.Scalar;
 
-import java.util.Locale;
-
 @TeleOp(name = "Phoebe: Freight Finder", group = "Phoebe")
 
 public class ObjectFinderTeleOp extends DriverControlledOperation {
@@ -49,9 +47,11 @@ public class ObjectFinderTeleOp extends DriverControlledOperation {
     @Override
     public void loop() {
         if (webcam.seeingObject()) {
-            telemetry.addData("Object", String.format(Locale.getDefault(), "%d-%d, %d-%d",
-                    webcam.getMinX(), webcam.getMaxX(), webcam.getMinY(), webcam.getMaxY())
+            telemetry.addData("Object", "%d-%d, %d-%d",
+                    webcam.getMinX(), webcam.getMaxX(), webcam.getMinY(), webcam.getMaxY()
             );
+            telemetry.addData("Largest contour area", "%.0f", webcam.getLargestArea());
+            telemetry.addData("Barcode", robot.getBarCodeLevel());
         }
         telemetry.addData("Bounds", webcam.getBounds());
 
@@ -122,10 +122,22 @@ public class ObjectFinderTeleOp extends DriverControlledOperation {
             dpad1UpPressed = false;
         }
 
+        /**
+         * Controls:
+         * GamePad2
+         *  dpad left
+         *
+         */
+
         //handle dpad of second game controller
         if (gamepad2.dpad_left) {
             if (!dpad2LeftPressed) {
-                webcam.decrementMinHue();
+                if (gamepad2.left_bumper) {
+                    webcam.decrementMinValue();
+                }
+                else {
+                    webcam.decrementMinHue();
+                }
                 dpad2LeftPressed = true;
             }
         }
@@ -135,7 +147,12 @@ public class ObjectFinderTeleOp extends DriverControlledOperation {
 
         if (gamepad2.dpad_right) {
             if (!dpad2RightPressed) {
-                webcam.incrementMinHue();
+                if (gamepad2.left_bumper) {
+                    webcam.incrementMinValue();
+                }
+                else {
+                    webcam.incrementMinHue();
+                }
                 dpad2RightPressed = true;
             }
         }
@@ -145,7 +162,12 @@ public class ObjectFinderTeleOp extends DriverControlledOperation {
 
         if (gamepad2.dpad_down) {
             if (!dpad2DownPressed) {
-                webcam.decrementMaxHue();
+                if (gamepad2.left_bumper) {
+                    webcam.decrementMaxValue();
+                }
+                else {
+                    webcam.decrementMaxHue();
+                }
                 dpad2DownPressed = true;
             }
         }
@@ -154,12 +176,23 @@ public class ObjectFinderTeleOp extends DriverControlledOperation {
         }
         if (gamepad2.dpad_up) {
             if (!dpad2UpPressed) {
-                webcam.incrementMaxHue();
+                if (gamepad2.left_bumper) {
+                    webcam.incrementMaxValue();
+                }
+                else {
+                    webcam.incrementMaxHue();
+                }
                 dpad2UpPressed = true;
             }
         }
         else {
             dpad2UpPressed = false;
+        }
+        if (gamepad1.left_stick_x < .2) {
+            webcam.decrementMinValue();
+        }
+        else if (gamepad1.left_stick_x > .2) {
+            webcam.incrementMinValue();
         }
     }
 

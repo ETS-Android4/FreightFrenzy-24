@@ -23,9 +23,9 @@ public class ContourDetector {
     List<MatOfPoint> contoursFound = new ArrayList<MatOfPoint>();
     List<MatOfPoint> contoursInRange = new ArrayList<MatOfPoint>();
 
-    double maxArea = 0;
-    int minY = 9999, minX = 9999;
-    int maxY = 0, maxX = 0;
+    double contourMaxArea = 0;
+    public int contourMinY = 9999, contourMinX = 9999;
+    public int contourMaxY = 0, contourMaxX = 0;
     double distanceToObjectFromCamera, angleToObjectFromCamera;
 
     // Cache
@@ -110,27 +110,28 @@ public class ContourDetector {
 
         Imgproc.findContours(mDilatedMask, contoursFound, mHierarchy, Imgproc.RETR_EXTERNAL, Imgproc.CHAIN_APPROX_SIMPLE);
 
-        minX = minY = 9999;
-        maxX = maxY = 0;
-        maxArea = 0;
+        contourMinX = contourMinY = 9999;
+        contourMaxX = contourMaxY = 0;
+        contourMaxArea = 0;
         for (MatOfPoint contour: contoursFound) {
             Rect boundingRectangle = Imgproc.boundingRect(contour);
             if (boundingRectangle.x*4 <= maxAllowedX && boundingRectangle.x*4 >= minAllowedX
                     && boundingRectangle.y*4 <= maxAllowedY && boundingRectangle.y*4 >=minAllowedY ) {
                 double area = Imgproc.contourArea(contour);
-                contoursInRange.add(contour);
-                if (area > maxArea) {
-                    maxArea = area;
-                    largestContour = contour;
-                    Core.multiply(contour, new Scalar(4,4), contour);
-                    minX = boundingRectangle.x*4;
-                    maxX = boundingRectangle.x*4 + boundingRectangle.width*4;
-                    minY = boundingRectangle.y*4;
-                    maxY = boundingRectangle.y*4 + boundingRectangle.height*4;
-                    updateObjectPosition();
-                    largestContour = contour;
+                if (area >= OpenCVWebcam.MINIMUM_AREA) {
+                    contoursInRange.add(contour);
+                    if (area > contourMaxArea) {
+                        contourMaxArea = area;
+                        largestContour = contour;
+                        Core.multiply(contour, new Scalar(4, 4), contour);
+                        contourMinX = boundingRectangle.x * 4;
+                        contourMaxX = boundingRectangle.x * 4 + boundingRectangle.width * 4;
+                        contourMinY = boundingRectangle.y * 4;
+                        contourMaxY = boundingRectangle.y * 4 + boundingRectangle.height * 4;
+                        updateObjectPosition();
+                    }
+                    mean = Core.mean(contour);
                 }
-                mean = Core.mean(contour);
             }
         }
         return contoursInRange;
@@ -144,12 +145,12 @@ public class ContourDetector {
     }
 
     public double getLargestArea() {
-        return maxArea;
+        return contourMaxArea;
     }
 
     public double getWidthInPixels() {
         if (getLargestArea() != 0) {
-            return maxY - minY;
+            return contourMaxY - contourMinY;
         }
         else {
             return 0;
@@ -157,7 +158,7 @@ public class ContourDetector {
     }
     public double getHeightInPixels() {
         if (getLargestArea() != 0) {
-            return maxX - minX;
+            return contourMaxX - contourMinX;
         }
         else {
             return 0;
@@ -165,7 +166,7 @@ public class ContourDetector {
     }
 
     public double getHeightWidthRatio() {
-        if (maxArea > 0) {
+        if (contourMaxArea > 0) {
             return (double) getHeightInPixels() / (double) getWidthInPixels();
         }
         return 0;
@@ -229,12 +230,24 @@ public class ContourDetector {
     public void incrementMaxSaturation() {
         mUpperBound.val[1] = Math.min(mUpperBound.val[1] + 1, 255);
     }
+    public void decrementMinValue() {
+        mLowerBound.val[2] = Math.max(mLowerBound.val[2] - 1, 0);
+    }
+    public void decrementMaxValue() {
+        mUpperBound.val[2] = Math.max(mUpperBound.val[2] - 1, mLowerBound.val[2]);
+    }
+    public void incrementMinValue() {
+        mLowerBound.val[2] = Math.min(mLowerBound.val[2] + 1, mUpperBound.val[2]);
+    }
+    public void incrementMaxValue() {
+        mUpperBound.val[2] = Math.min(mUpperBound.val[2] + 1, 255);
+    }
     /** Return the distance to the object from the camera in inches
      *
      * @return
      */
     private double getDistanceFromCamera() {
-        int pixelWidth = (maxY - minY);
+        int pixelWidth = (contourMaxY - contourMinY);
         return 1/Field.MM_PER_INCH * OpenCVWebcam.FOCAL_LENGTH / pixelWidth;
     }
 
@@ -242,15 +255,15 @@ public class ContourDetector {
      *
      * @return
      */
-    private double getXPixelPosition() {
-        return (double)(maxY - minY)/2 + minY - OpenCVWebcam.Y_PIXEL_COUNT/2;
+    private int getXPixelPosition() {
+        return (contourMaxY - contourMinY)/2 + contourMinY - OpenCVWebcam.Y_PIXEL_COUNT/2;
     }
 
     /** Returns the y position of the object seen in pixels
      * @return
      */
-    public double getYPixelPosition() {
-        return (double)(maxX - minX)/2 + minX;
+    public int getYPixelPosition() {
+        return (contourMaxX - contourMinX)/2 + contourMinX;
     }
 
     /** Returns the x position of the object seen in inches

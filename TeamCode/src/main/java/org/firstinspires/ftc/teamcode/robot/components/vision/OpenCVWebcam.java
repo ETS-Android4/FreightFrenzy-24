@@ -28,6 +28,7 @@ import com.qualcomm.robotcore.hardware.HardwareMap;
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
+import org.firstinspires.ftc.teamcode.game.Alliance;
 import org.firstinspires.ftc.teamcode.game.Match;
 import org.firstinspires.ftc.teamcode.robot.RobotConfig;
 import org.opencv.core.Mat;
@@ -53,11 +54,12 @@ public class OpenCVWebcam {
     public static final Scalar BOX_COLOR_MAX = new Scalar(22, 255, 255);
     public static final Scalar SILVER_COLOR_MIN = new Scalar(220, 0, 128);
     public static final Scalar SILVER_COLOR_MAX = new Scalar(255, 20, 220);
-    public static final Scalar ELEMENT_COLOR_MIN = new Scalar(100, 90, 50);
-    public static final Scalar ELEMENT_COLOR_MAX = new Scalar(160, 255, 255);
+    public static final Scalar ELEMENT_COLOR_MIN = new Scalar(0, 0, 168);
+    public static final Scalar ELEMENT_COLOR_MAX = new Scalar(172, 111, 255);
 
     public static final int Y_PIXEL_COUNT = 1920;
     public static final int X_PIXEL_COUNT = 1080;
+    public static final int MINIMUM_AREA = 100;
 
     OpenCvWebcam webcam;
     Pipeline pipeline;
@@ -86,6 +88,7 @@ public class OpenCVWebcam {
         // landscape orientation, though.
         //webcam.setViewportRenderingPolicy(OpenCvCamera.ViewportRenderingPolicy.OPTIMIZE_VIEW);
         webcam.setMillisecondsPermissionTimeout(2500); // Timeout for obtaining permission is configurable. Set before opening.
+        webcam.showFpsMeterOnViewport(false);
         webcam.openCameraDeviceAsync(new OpenCvCamera.AsyncCameraOpenListener()
         {
             @Override
@@ -185,22 +188,26 @@ public class OpenCVWebcam {
     public void decrementMaxSaturation() {pipeline.contourDetector.decrementMaxSaturation();}
     public void incrementMinSaturation() {pipeline.contourDetector.incrementMinSaturation();}
     public void incrementMaxSaturation() {pipeline.contourDetector.incrementMaxSaturation();}
+    public void decrementMinValue() {pipeline.contourDetector.decrementMinSaturation();}
+    public void decrementMaxValue() {pipeline.contourDetector.decrementMaxSaturation();}
+    public void incrementMinValue() {pipeline.contourDetector.incrementMinSaturation();}
+    public void incrementMaxValue() {pipeline.contourDetector.incrementMaxSaturation();}
 
     public String getBounds() {
         return (pipeline.contourDetector.getBounds());
     }
 
     public int getMinX() {
-        return pipeline.contourDetector.minX;
+        return pipeline.contourDetector.contourMinX;
     }
     public int getMaxX() {
-        return pipeline.contourDetector.maxX;
+        return pipeline.contourDetector.contourMaxX;
     }
     public int getMinY() {
-        return pipeline.contourDetector.minY;
+        return pipeline.contourDetector.contourMinY;
     }
     public int getMaxY() {
-        return pipeline.contourDetector.maxY;
+        return pipeline.contourDetector.contourMaxY;
     }
 
     public double getXPosition() {
@@ -234,16 +241,35 @@ public class OpenCVWebcam {
         return pipeline.contourDetector.getLargestArea() > 0;
     }
 
+    public double getLargestArea() {
+        return pipeline.contourDetector.getLargestArea();
+    }
+
+    /**
+     * Return where the team scoring element is on the bar code
+     *
+     * @return 1,2, or 3 depending on whether the object is on the left, center or right
+     */
     public int getBarCodeLevel() {
-        if (seeingObject()) {
-            if (getMinX() > 1100) {
+        if (Match.getInstance().getAlliance() == Alliance.Color.RED) {
+            if (getMinY() > 1100) {
                 return 1;
+            } else if (getMinY() > 500) {
+                return 2;
             }
-            else if (getMinX() > 600) {
+            else {
+                return 3;
+            }
+        }
+        else {
+            if (!seeingObject()) {
+                return 1;
+            } else if (getMinY() < 800) {
+                return 3;
+            } else {
                 return 2;
             }
         }
-        return 3;
     }
 
     public class Pipeline extends OpenCvPipeline {
@@ -276,8 +302,12 @@ public class OpenCVWebcam {
                 }
                 Rect limitsRectangle = contourDetector.getAreaOfInterest();
                 Imgproc.rectangle(input, limitsRectangle, RED, 6);
+                Thread.yield();
                 return input;
             }
         }
     }
+     public void stop() {
+        //webcam.stopStreaming();
+     }
 }

@@ -2,7 +2,7 @@ package org.firstinspires.ftc.teamcode.robot.operations;
 
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.teamcode.game.Field;
-import org.firstinspires.ftc.teamcode.robot.components.drivetrain.MecanumDriveTrain;
+import org.firstinspires.ftc.teamcode.robot.components.drivetrain.DriveTrain;
 
 import java.util.Date;
 import java.util.Locale;
@@ -15,10 +15,10 @@ public class DistanceInDirectionOperation extends DistanceOperation {
     private double distance;
     private double speed;
     double direction;
-    MecanumDriveTrain driveTrain;
+    DriveTrain driveTrain;
 
     public DistanceInDirectionOperation(double travelDistance, double heading,
-                                        double speed, MecanumDriveTrain driveTrain, String title) {
+                                        double speed, DriveTrain driveTrain, String title) {
         super(travelDistance, travelDistance, driveTrain, title);
         this.distance = travelDistance;
         this.speed = speed;
@@ -41,7 +41,7 @@ public class DistanceInDirectionOperation extends DistanceOperation {
         } else {
             // adjust relative speed based on heading error.
             double bearingError = AngleUnit.normalizeDegrees(direction - currentBearing);
-            double steer = MecanumDriveTrain.getSteer(bearingError, MecanumDriveTrain.P_DRIVE_COEFF);
+            double steer = DriveTrain.getSteer(bearingError, DriveTrain.P_DRIVE_COEFFICIENT);
 
             // if driving in reverse, the motor correction also needs to be reversed
             if (distance < 0)

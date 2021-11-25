@@ -3,18 +3,21 @@ package org.firstinspires.ftc.teamcode.robot.operations;
 import com.acmerobotics.roadrunner.geometry.Pose2d;
 import com.acmerobotics.roadrunner.trajectory.Trajectory;
 
-import org.firstinspires.ftc.teamcode.robot.components.drivetrain.MecanumDriveTrain;
+import org.firstinspires.ftc.teamcode.robot.components.drivetrain.DriveTrain;
 
 import java.util.Locale;
 
 /**
- * Created by Silver Titans on 10/12/17.
+ * Operation to reach a specified pose.
+ *
+ * We accomplish this by using the FollowTrajectory class and setting its trajectory on the
+ * fly when the operation is started.
  */
 
 public class DriveToPositionOperation extends FollowTrajectory {
     private Pose2d desiredPose;
     private boolean trajectoryStarted;
-    MecanumDriveTrain driveTrain;
+    DriveTrain driveTrain;
 
 
     public boolean isTrajectoryStarted() {
@@ -28,7 +31,7 @@ public class DriveToPositionOperation extends FollowTrajectory {
         this.trajectoryStarted = trajectoryStarted;
     }
 
-    public DriveToPositionOperation(Pose2d desiredPose, MecanumDriveTrain driveTrain, String title) {
+    public DriveToPositionOperation(Pose2d desiredPose, DriveTrain driveTrain, String title) {
         super(null, driveTrain, title);
         this.desiredPose = desiredPose;
         this.title = title;

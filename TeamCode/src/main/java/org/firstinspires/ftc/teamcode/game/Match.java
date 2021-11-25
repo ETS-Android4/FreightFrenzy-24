@@ -8,7 +8,7 @@ import com.qualcomm.robotcore.util.RobotLog;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.teamcode.robot.Robot;
-import org.firstinspires.ftc.teamcode.robot.components.drivetrain.MecanumDriveTrain;
+import org.firstinspires.ftc.teamcode.robot.RobotConfig;
 
 import java.util.Date;
 
@@ -105,11 +105,12 @@ public class Match {
 
         if (robot != null && field != null) {
             // Send telemetry message to signify robot context;
-            telemetry.addData("State:", status + "bc: " + getBarcodeLevel());
+            telemetry.addData("State:", status + ", bc:" + getBarcodeLevel());
             telemetry.addData("Position", robot.getPosition());
-            telemetry.addData("Arm", robot.getCappingArmStatus());
             telemetry.addData("Carousel", robot.getCarouselStatus());
-            telemetry.addData("Inout", robot.getInoutStatus());
+            telemetry.addData("Input", robot.getIntakeStatus());
+            telemetry.addData("Output", robot.getOutputStatus());
+            telemetry.addData("Drive", robot.getDriveTrain().getStatus());
             telemetry.addData("TrajectoryErr", trajectoryError);
             updateDashBoard();
         }
@@ -151,10 +152,10 @@ public class Match {
         double cos = Math.cos(rotation);
 
         //calculate the four points of the robot as if it was sitting on the origin
-        double x1 = (MecanumDriveTrain.DRIVE_TRAIN_LENGTH/2*cos + MecanumDriveTrain.DRIVE_TRAIN_WIDTH/2*sin)/Field.MM_PER_INCH;
-        double y1 = (MecanumDriveTrain.DRIVE_TRAIN_LENGTH/2*sin - MecanumDriveTrain.DRIVE_TRAIN_WIDTH/2*cos)/Field.MM_PER_INCH;
-        double x2 = (MecanumDriveTrain.DRIVE_TRAIN_LENGTH/2*cos - MecanumDriveTrain.DRIVE_TRAIN_WIDTH/2*sin)/Field.MM_PER_INCH;
-        double y2 = (MecanumDriveTrain.DRIVE_TRAIN_LENGTH/2*sin + MecanumDriveTrain.DRIVE_TRAIN_WIDTH/2*cos)/Field.MM_PER_INCH;
+        double x1 = (RobotConfig.ROBOT_LENGTH/2*cos + RobotConfig.ROBOT_WIDTH/2*sin)/Field.MM_PER_INCH;
+        double y1 = (RobotConfig.ROBOT_LENGTH/2*sin - RobotConfig.ROBOT_WIDTH/2*cos)/Field.MM_PER_INCH;
+        double x2 = (RobotConfig.ROBOT_LENGTH/2*cos - RobotConfig.ROBOT_WIDTH/2*sin)/Field.MM_PER_INCH;
+        double y2 = (RobotConfig.ROBOT_LENGTH/2*sin + RobotConfig.ROBOT_WIDTH/2*cos)/Field.MM_PER_INCH;
         double x3 = -x1;
         double y3 = -y1;
         double x4 = -x2;
@@ -173,8 +174,8 @@ public class Match {
 
 
         //the point in front of the robot to create the triangle to show direction
-        double px = (pose2d.getX() + (MecanumDriveTrain.DRIVE_TRAIN_LENGTH/2 + 100)*cos/Field.MM_PER_INCH);
-        double py = (pose2d.getY() + (MecanumDriveTrain.DRIVE_TRAIN_LENGTH/2 + 100)*sin/Field.MM_PER_INCH);
+        double px = (pose2d.getX() + (RobotConfig.ROBOT_LENGTH/2 + 100)*cos/Field.MM_PER_INCH);
+        double py = (pose2d.getY() + (RobotConfig.ROBOT_LENGTH/2 + 100)*sin/Field.MM_PER_INCH);
 
 
         //draw our rectangular robot

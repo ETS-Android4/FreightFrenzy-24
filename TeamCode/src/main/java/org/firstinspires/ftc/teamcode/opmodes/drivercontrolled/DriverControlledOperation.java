@@ -37,6 +37,7 @@ import com.qualcomm.robotcore.util.RobotLog;
 import org.firstinspires.ftc.teamcode.game.Alliance;
 import org.firstinspires.ftc.teamcode.game.Match;
 import org.firstinspires.ftc.teamcode.robot.Robot;
+import org.firstinspires.ftc.teamcode.robot.operations.OutputOperation;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
@@ -60,10 +61,6 @@ import java.util.Date;
 @TeleOp(name = "Phoebe: Driver Controlled", group = "Phoebe")
 //@Disabled
 public class DriverControlledOperation extends OpMode {
-
-    {
-        msStuckDetectInit     = 20000;
-    }
 
     protected Robot robot = Match.getInstance().getRobot();
 
@@ -132,6 +129,11 @@ public class DriverControlledOperation extends OpMode {
 
     @Override
     public void start() {
+        robot.queueTertiaryOperation
+            (new OutputOperation(
+                robot.getOutPutter(),
+                OutputOperation.Type.Fold,
+                "Fold"));
     }
 
     /*

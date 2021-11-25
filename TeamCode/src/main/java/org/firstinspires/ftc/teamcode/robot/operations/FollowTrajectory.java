@@ -5,7 +5,7 @@ import com.acmerobotics.roadrunner.trajectory.Trajectory;
 
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.teamcode.game.Match;
-import org.firstinspires.ftc.teamcode.robot.components.drivetrain.MecanumDriveTrain;
+import org.firstinspires.ftc.teamcode.robot.components.drivetrain.DriveTrain;
 
 import java.util.Locale;
 
@@ -17,9 +17,9 @@ public class FollowTrajectory extends Operation {
     public static final int DEFAULT_CORRECTION_COUNT = 1;
 
     protected Trajectory trajectory;
-    MecanumDriveTrain driveTrain;
+    DriveTrain driveTrain;
 
-    public FollowTrajectory(Trajectory trajectory, MecanumDriveTrain driveTrain, String title) {
+    public FollowTrajectory(Trajectory trajectory, DriveTrain driveTrain, String title) {
         this.trajectory = trajectory;
         this.driveTrain = driveTrain;
         this.title = title;
@@ -49,7 +49,7 @@ public class FollowTrajectory extends Operation {
             return true;
         }
         else {
-            Match.log(error);
+            //Match.log(error);
             return false;
         }
     }

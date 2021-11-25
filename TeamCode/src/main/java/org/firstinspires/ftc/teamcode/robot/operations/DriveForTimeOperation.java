@@ -1,6 +1,6 @@
 package org.firstinspires.ftc.teamcode.robot.operations;
 
-import org.firstinspires.ftc.teamcode.robot.components.drivetrain.MecanumDriveTrain;
+import org.firstinspires.ftc.teamcode.robot.components.drivetrain.DriveTrain;
 
 import java.util.Date;
 import java.util.Locale;
@@ -13,7 +13,7 @@ public class DriveForTimeOperation extends Operation {
     private long time;
     private double robotRelativeHeading;
     private double speed;
-    private MecanumDriveTrain driveTrain;
+    private DriveTrain driveTrain;
 
     public void setSpeed(double speed) {
         this.speed = speed;
@@ -23,7 +23,7 @@ public class DriveForTimeOperation extends Operation {
         return time;
     }
 
-    public DriveForTimeOperation(long time, double heading, double speed, MecanumDriveTrain driveTrain, String title) {
+    public DriveForTimeOperation(long time, double heading, double speed, DriveTrain driveTrain, String title) {
         this.time = time;
         this.robotRelativeHeading = heading;
         this.speed = speed;

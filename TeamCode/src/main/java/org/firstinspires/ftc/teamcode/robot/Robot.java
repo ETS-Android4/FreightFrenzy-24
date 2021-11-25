@@ -3,21 +3,21 @@ package org.firstinspires.ftc.teamcode.robot;
 import android.util.Log;
 
 import com.acmerobotics.roadrunner.geometry.Pose2d;
-import com.acmerobotics.roadrunner.trajectory.TrajectoryBuilder;
 import com.qualcomm.hardware.rev.RevBlinkinLedDriver;
 import com.qualcomm.robotcore.hardware.Gamepad;
 import com.qualcomm.robotcore.hardware.HardwareMap;
+import com.spartronics4915.lib.T265Camera;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.teamcode.game.Alliance;
 import org.firstinspires.ftc.teamcode.game.Field;
 import org.firstinspires.ftc.teamcode.game.Match;
-import org.firstinspires.ftc.teamcode.robot.components.CappingArm;
 import org.firstinspires.ftc.teamcode.robot.components.CarouselSpinner;
-import org.firstinspires.ftc.teamcode.robot.components.InOutTake;
+import org.firstinspires.ftc.teamcode.robot.components.Intake;
 import org.firstinspires.ftc.teamcode.robot.components.LED;
-import org.firstinspires.ftc.teamcode.robot.components.drivetrain.MecanumDriveTrain;
+import org.firstinspires.ftc.teamcode.robot.components.OutPutter;
+import org.firstinspires.ftc.teamcode.robot.components.drivetrain.DriveTrain;
 import org.firstinspires.ftc.teamcode.robot.components.vision.OpenCVWebcam;
 import org.firstinspires.ftc.teamcode.robot.components.vision.VslamCamera;
 import org.firstinspires.ftc.teamcode.robot.operations.Operation;
@@ -25,10 +25,37 @@ import org.firstinspires.ftc.teamcode.robot.operations.OperationThread;
 
 /**
  * This class represents our robot.
- * The config on the robot needs to have the following entries defined:
- * *
- * rightDrive: the right motor of the drive train
- * leftDrive: the left motor of the drive tpenrain
+ *
+ * It supports the following controls:
+ *  GamePad1:
+ *         Left stick - drive, right stick - rotate
+ *         x - abort pending operations
+ *         a - lowest arm level
+ *         b - middle arm level
+ *         y - top arm level
+ *         Dpad Up - raise output arm
+ *         Dpad Down - lower output arm
+ *         Dpad Left -
+ *              if right trigger is pressed: lower intake platform
+ *              other wise - set to input position
+ *         Dpad right -
+ *              if right trigger is pressed: raise intake platform
+ *              otherwise - set to output position
+ *
+ *  GamePad2:
+ *         Left stick - y axis - carousel speed
+ *         Left stick - x axis - intake speed
+ *         Right stick - y axis - outPutter speed
+ *         Dpad Up - raise capping arm
+ *         Dpad Down - lower capping arm
+ *         Left trigger - wind capping servo
+ *         Right trigger - unwind capping servo
+ *         Left bumper - retract output
+ *         x - fold arm
+ *         a - lowest arm level
+ *         b - middle arm level
+ *         y - top arm level
+ *
  */
 
 public class Robot {
@@ -41,12 +68,12 @@ public class Robot {
     OperationThread operationThreadSecondary;
     OperationThread operationThreadTertiary;
 
-    MecanumDriveTrain mecanumDriveTrain;
+    DriveTrain driveTrain;
     CarouselSpinner carouselSpinner;
-    InOutTake inOutTake;
-    CappingArm cappingArm;
-    org.firstinspires.ftc.teamcode.robot.components.LED led;
-    //WebCam webcam;
+    Intake intake;
+    OutPutter outputter;
+    LED led;
+
     OpenCVWebcam webcam;
     VslamCamera vslamCamera;
 
@@ -71,18 +98,20 @@ public class Robot {
         this.match = match;
 
         //initialize our components
-        initCameras(match.getAlliance(), match.getStartingPosition());
+        initCameras();
         initDriveTrain();
         this.carouselSpinner = new CarouselSpinner(hardwareMap);
-        this.inOutTake = new InOutTake(hardwareMap);
-        this.cappingArm = new CappingArm(hardwareMap);
+        this.intake = new Intake(hardwareMap);
+        this.outputter = new OutPutter(hardwareMap);
         this.led = new LED(hardwareMap);
+
         if (match.getAlliance() == Alliance.Color.RED) {
             this.led.setPattern(RevBlinkinLedDriver.BlinkinPattern.RED);
         }
         else {
             this.led.setPattern(RevBlinkinLedDriver.BlinkinPattern.BLUE);
         }
+
 
         telemetry.addData("Status", "Creating operations thread, please wait");
         telemetry.update();
@@ -102,10 +131,10 @@ public class Robot {
         //Create our drive train
         telemetry.addData("Status", "Initializing drive train, please wait");
         telemetry.update();
-        this.mecanumDriveTrain = new MecanumDriveTrain(hardwareMap, telemetry, vslamCamera);
+        this.driveTrain = new DriveTrain(hardwareMap, vslamCamera);
     }
 
-    public void initCameras(Alliance.Color allianceColor, Field.StartingPosition startingPosition) {
+    public void initCameras() {
         //initialize webcam
         Match.log("Initializing Webcam");
         telemetry.addData("Status", "Initializing Webcam, please wait");
@@ -130,25 +159,12 @@ public class Robot {
         this.operationThreadPrimary.abort();
         this.operationThreadSecondary.abort();
         this.operationThreadTertiary.abort();
-        this.mecanumDriveTrain.stop();
+        this.driveTrain.stop();
+        this.webcam.stop();
 
-        this.cappingArm.stop();
-        this.inOutTake.stop();
+        this.outputter.stop();
+        //this.intake.stop();
         Match.log(("Robot stopped"));
-    }
-
-    /**
-     * Returns a string representing the status of the motors of the robot
-     *
-     * @return Motor Status
-     */
-    public String getMotorStatus() {
-        if (this.mecanumDriveTrain == null) {
-            return "Drivetrain not initialized";
-        }
-        else {
-            return this.mecanumDriveTrain.getStatus();
-        }
     }
 
     public void queuePrimaryOperation(Operation operation) {
@@ -220,6 +236,20 @@ public class Robot {
         return this.everythingButCamerasInitialized && this.vslamCamera.isInitialized();
     }
 
+
+    public void handleGameControllers(Gamepad gamePad1, Gamepad gamePad2) {
+        if (gamePad1.x) {
+            this.operationThreadPrimary.abort();
+            this.operationThreadSecondary.abort();
+            this.operationThreadTertiary.abort();
+        }
+        this.handleDriveTrain(gamePad1);
+        this.carouselSpinner.setSpeed(-gamePad2.left_stick_y);
+        //this.intake.setSpeed(-gamePad2.right_stick_y);
+        handleOutput(gamePad1, gamePad2);
+        handleInput(gamePad1, gamePad2);
+    }
+
     public void handleDriveTrain(Gamepad gamePad1) {
         if (this.primaryOperationsCompleted()) {
             double multiplier = 0.6;
@@ -228,50 +258,65 @@ public class Robot {
 
             double rotation = Math.pow(gamePad1.right_stick_x, 3) * 0.5; // Get right joystick's x-axis value for rotation
 
-            this.mecanumDriveTrain.drive(Math.atan2(x, y), Math.hypot(x, y), rotation);
+            this.driveTrain.drive(Math.atan2(x, y), Math.hypot(x, y), rotation);
         }
     }
 
-    public void handleGameControllers(Gamepad gamePad1, Gamepad gamePad2) {
-        if (gamePad1.x) {
-            this.operationThreadPrimary.abort();
-            this.operationThreadSecondary.abort();
-            this.operationThreadTertiary.abort();
+    public void handleInput(Gamepad gamePad1, Gamepad gamePad2) {
+        this.intake.setSpeed(gamePad2.left_stick_x);
+        if (gamePad1.dpad_left) {
+            if (gamePad1.right_trigger > .1) {
+                intake.lowerIntake();
+                outputter.fold();
+            }
+            else {
+                intake.setForIntake();
+            }
         }
-        this.carouselSpinner.setSpeed(-gamePad2.left_stick_y);
-        this.inOutTake.setSpeed(-gamePad2.right_stick_y);
-        this.handleCappingArm(gamePad2);
-        this.handleDriveTrain(gamePad1);
+        else if (gamePad1.dpad_right) {
+            if (gamePad1.right_trigger > .1) {
+                intake.raiseIntake();
+            }
+            else {
+                intake.setForOutput();
+            }
+        }
     }
 
-    public void handleCappingArm(Gamepad gamepad) {
-        //raise arm if right stick is pushed forward enough
-        if (gamepad.dpad_up) {
-            cappingArm.raiseArm();
+    public void handleOutput(Gamepad gamePad1, Gamepad gamePad2) {
+        if (gamePad2.left_bumper) {
+            outputter.retract();
         }
-        else if (gamepad.dpad_down) {
-            cappingArm.lowerArm();
+        if (gamePad1.dpad_up) {
+            outputter.raiseArm();
+        }
+        else if (gamePad1.dpad_down) {
+            outputter.lowerArm();
+        }
+        if (gamePad1.a || gamePad2.a) {
+            outputter.setLowPosition();
+        }
+        if (gamePad1.b || gamePad2.b) {
+            outputter.setMiddlePosition();
+        }
+        if (gamePad1.y || gamePad2.y) {
+            outputter.setHighPosition();
+        }
+        if (gamePad2.x) {
+            outputter.fold();
         }
 
-        if (gamepad.left_trigger > 0) {
-            cappingArm.windServo();
-        }
-        else if (gamepad.right_trigger > 0) {
-            cappingArm.unwindServo();
-        }
-        else {
-            cappingArm.stopServo();
-        }
+        this.outputter.setSpeed(-gamePad2.right_stick_y);
     }
 
     public boolean setInitialPose(Pose2d pose) {
-        this.mecanumDriveTrain.setLocalizer(vslamCamera);
+        this.driveTrain.setLocalizer(vslamCamera);
         return this.vslamCamera.setCurrentPose(pose);
     }
 
     public void reset() {
-        if (this.mecanumDriveTrain != null) {
-            this.mecanumDriveTrain.ensureWheelDirection();
+        if (this.driveTrain != null) {
+            this.driveTrain.ensureWheelDirection();
         }
         startVSLAM();
         this.webcam.start();
@@ -285,36 +330,25 @@ public class Robot {
         this.vslamCamera.start();
     }
 
-    public TrajectoryBuilder trajectoryBuilder(Pose2d startPose) {
-        return this.mecanumDriveTrain.trajectoryBuilder(startPose);
-    }
-    public TrajectoryBuilder accurateTrajectoryBuilder(Pose2d startPose) {
-        return this.mecanumDriveTrain.accurateTrajectoryBuilder(startPose);
-    }
-
     public OpenCVWebcam getWebcam() {
         return this.webcam;
     }
 
-    public MecanumDriveTrain getDriveTrain() {
-        return this.mecanumDriveTrain;
+    public DriveTrain getDriveTrain() {
+        return this.driveTrain;
     }
 
-    public void setCarouselSpinnerSpeed(double speed) {
-        this.carouselSpinner.setSpeed(speed);
-    }
-
-    public String getCappingArmStatus() {
-        return this.cappingArm.getStatus();
+    public OutPutter getOutPutter() {
+        return this.outputter;
     }
 
     public String getCarouselStatus() {
         return this.carouselSpinner.getStatus();
     }
-
-    public String getInoutStatus() {
-        return this.inOutTake.getStatus();
+    public String getOutputStatus() {
+        return this.outputter.getStatus();
     }
+
 
     public void setPattern(RevBlinkinLedDriver.BlinkinPattern pattern) {
         this.led.setPattern(pattern);
@@ -327,7 +361,19 @@ public class Robot {
         return this.vslamCamera.getStatus();
     }
 
+    public T265Camera.PoseConfidence getPoseConfidence() {
+        return vslamCamera.getPoseConfidence();
+    }
+
     public int getBarCodeLevel() {
         return this.webcam.getBarCodeLevel();
+    }
+
+    public String getIntakeStatus() {
+        return this.intake.getStatus();
+    }
+
+    public void setInitialOutputPosition() {
+        this.outputter.setInitialPosition();
     }
 }

@@ -11,7 +11,7 @@ import com.spartronics4915.lib.T265Camera;
 
 import org.firstinspires.ftc.teamcode.game.Field;
 import org.firstinspires.ftc.teamcode.game.Match;
-import org.firstinspires.ftc.teamcode.robot.components.drivetrain.MecanumDriveTrain;
+import org.firstinspires.ftc.teamcode.roadrunner.drive.DriveConstants;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Locale;
@@ -35,13 +35,13 @@ import java.util.function.Consumer;
 public class VslamCamera implements Localizer, Consumer<T265Camera.CameraUpdate> {
     //Remember all measurements for ftc-lib geometry are in meters
 
-    //Our camera sticks out about 1.75 inches beyond the center of the front wheels
+    //Our camera sticks out about 2 inches beyond the center of the front wheels
     public static final double CENTER_OFFSET_X =
-            -(MecanumDriveTrain.DRIVE_TRAIN_LENGTH/2 + 1.75*Field.MM_PER_INCH) / 1000;
+            -(DriveConstants.TRACK_LENGTH/2 + 2*Field.MM_PER_INCH) / 1000;
     //How far left of the camera the center is
-    public static final double CENTER_OFFSET_Y = 3*Field.M_PER_INCH;
+    public static final double CENTER_OFFSET_Y = 0;//3*Field.M_PER_INCH;
     public static final double T265_ROTATION = 0;
-    private static final Transform2d robotCenterOffsetFromCamera =
+    public static final Transform2d robotCenterOffsetFromCamera =
             new Transform2d(new Translation2d(CENTER_OFFSET_X, CENTER_OFFSET_Y),
                     new Rotation2d(Math.toRadians(T265_ROTATION)));
 
@@ -82,7 +82,7 @@ public class VslamCamera implements Localizer, Consumer<T265Camera.CameraUpdate>
         synchronized (synchronizationObject) {
             if (lastCameraUpdate == null) {
                 Match.log("Unable to set pose as no update has been received from camera");
-                return true;
+                return false;
             }
             else if (lastCameraUpdate.confidence == T265Camera.PoseConfidence.Low){
                 Match.log("Unable to set pose as confidence level is "
@@ -91,7 +91,7 @@ public class VslamCamera implements Localizer, Consumer<T265Camera.CameraUpdate>
             }
             else {
                 t265Camera.setPose(Field.roadRunnerToCameraPose(pose));
-                currentPose = pose;
+                //currentPose = pose;
                 Match.log(
                         "Set pose to " + pose
                                 + ", while confidence was: " + lastCameraUpdate.confidence.toString());
@@ -187,12 +187,12 @@ public class VslamCamera implements Localizer, Consumer<T265Camera.CameraUpdate>
                 lastCameraUpdate = cameraUpdate;
                 //only update our position if the confidence level is not low
                 if (cameraUpdate.confidence != T265Camera.PoseConfidence.Low) {
-                    pose2dVelocity = new Pose2d(
-                            cameraUpdate.velocity.vxMetersPerSecond / Field.M_PER_INCH,
-                            cameraUpdate.velocity.vyMetersPerSecond / Field.M_PER_INCH,
-                            cameraUpdate.velocity.omegaRadiansPerSecond);
-                    //set last pose to be the current one
-                    currentPose = Field.cameraToRoadRunnerPose(cameraUpdate.pose);
+                pose2dVelocity = new Pose2d(
+                        cameraUpdate.velocity.vxMetersPerSecond / Field.M_PER_INCH,
+                        cameraUpdate.velocity.vyMetersPerSecond / Field.M_PER_INCH,
+                        cameraUpdate.velocity.omegaRadiansPerSecond);
+                //set last pose to be the current one
+                currentPose = Field.cameraToRoadRunnerPose(cameraUpdate.pose);
                 }
                 else {
                     Match.log("Did not accept camera update because the confidence was "
@@ -220,5 +220,9 @@ public class VslamCamera implements Localizer, Consumer<T265Camera.CameraUpdate>
 
     public boolean havePosition() {
         return lastCameraUpdate != null;
+    }
+
+    public T265Camera.PoseConfidence getPoseConfidence() {
+        return lastCameraUpdate.confidence;
     }
 }

@@ -4,7 +4,6 @@ import com.acmerobotics.dashboard.config.Config;
 import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 
 import org.firstinspires.ftc.teamcode.game.Field;
-import org.firstinspires.ftc.teamcode.robot.components.drivetrain.MecanumDriveTrain;
 
 /*
  * Constants shared between multiple drive types.
@@ -46,9 +45,10 @@ public class DriveConstants {
      * angular distances although most angular parameters are wrapped in Math.toRadians() for
      * convenience. Make sure to exclude any gear ratio included in MOTOR_CONFIG from GEAR_RATIO.
      */
-    public static double WHEEL_RADIUS = 50/ Field.MM_PER_INCH; // in
-    public static double GEAR_RATIO = 1; // output (wheel) speed / input (motor) speed
-    public static double TRACK_WIDTH = MecanumDriveTrain.DRIVE_TRAIN_WIDTH/Field.MM_PER_INCH; // in
+    public static double WHEEL_RADIUS = 70/2/ Field.MM_PER_INCH; // Rev mecanum: 70 mm diameter
+    public static double GEAR_RATIO = 80/40; // output (wheel) speed / input (motor) speed
+    public static double TRACK_WIDTH = 9; // in
+    public static double TRACK_LENGTH = 13; // in
 
     /*
      * These are the feedforward parameters used to model the drive motor behavior. If you are using
@@ -75,6 +75,14 @@ public class DriveConstants {
 
     public static double encoderTicksToInches(double ticks) {
         return WHEEL_RADIUS * 2 * Math.PI * GEAR_RATIO * ticks / TICKS_PER_REV;
+    }
+
+    public static double encoderTicksToMMs(double ticks) {
+        return encoderTicksToInches(ticks)*Field.MM_PER_INCH;
+    }
+
+    public static int mmToEncoderTicks(double mms) {
+        return (int) (mms/encoderTicksToMMs(1));
     }
 
     public static double rpmToVelocity(double rpm) {

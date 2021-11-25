@@ -4,10 +4,10 @@ import com.acmerobotics.roadrunner.geometry.Pose2d;
 import com.acmerobotics.roadrunner.geometry.Vector2d;
 import com.acmerobotics.roadrunner.trajectory.Trajectory;
 import com.arcrobotics.ftclib.geometry.Rotation2d;
-import com.qualcomm.robotcore.util.RobotLog;
 
 import org.firstinspires.ftc.teamcode.robot.RobotConfig;
-import org.firstinspires.ftc.teamcode.robot.components.drivetrain.MecanumDriveTrain;
+
+import static org.firstinspires.ftc.teamcode.roadrunner.drive.SampleMecanumDrive.trajectoryBuilder;
 
 /**
  * Created by Silver Titans on 9/16/17.
@@ -16,63 +16,66 @@ import org.firstinspires.ftc.teamcode.robot.components.drivetrain.MecanumDriveTr
 public class Field {
     public static final float MM_PER_INCH = 25.4f;
     public static final double M_PER_INCH = MM_PER_INCH/1000;
-    //the width of each tile
-    public static final double TILE_WIDTH = 24 * MM_PER_INCH;
-    // the width of the FTC field (from the center point to the outer panels)
-    public static final double FIELD_WIDTH = 6*TILE_WIDTH;
-    public static final double TAPE_WIDTH = 2*MM_PER_INCH;
+    //the ROBOT_WIDTH of each tile
+    public static final double TILE_ROBOT_WIDTH = 24 * MM_PER_INCH;
+    // the ROBOT_WIDTH of the FTC field (from the center point to the outer panels)
+    public static final double FIELD_ROBOT_WIDTH = 6*TILE_ROBOT_WIDTH;
+    public static final double TAPE_ROBOT_WIDTH = 2*MM_PER_INCH;
 
     public static volatile boolean initialized = false;
     public static Object mutex = new Object();
 
 
     public enum StartingPosition {
-        LEFT, RIGHT
+        Left, Right
+    }
+    public enum Level {
+        Bottom, Middle, High
     }
     public static final Pose2d[][] startingPoses = new Pose2d[Alliance.Color.values().length][StartingPosition.values().length];
     {
-        startingPoses[Alliance.Color.RED.ordinal()][StartingPosition.LEFT.ordinal()] =
+        startingPoses[Alliance.Color.RED.ordinal()][StartingPosition.Left.ordinal()] =
                 new Pose2d(
-                        (-2*Field.TILE_WIDTH + RobotConfig.WIDTH/2)/MM_PER_INCH,
-                        (-Field.FIELD_WIDTH/2 + RobotConfig.LENGTH/2)/MM_PER_INCH,
+                        (-2*Field.TILE_ROBOT_WIDTH + RobotConfig.ROBOT_WIDTH/2)/MM_PER_INCH,
+                        (-Field.FIELD_ROBOT_WIDTH/2 + RobotConfig.ROBOT_LENGTH/2)/MM_PER_INCH,
                         Math.toRadians(90));
-        startingPoses[Alliance.Color.RED.ordinal()][StartingPosition.RIGHT.ordinal()] =
+        startingPoses[Alliance.Color.RED.ordinal()][StartingPosition.Right.ordinal()] =
                 new Pose2d(
-                        (RobotConfig.WIDTH/2)/MM_PER_INCH,
-                        (-Field.FIELD_WIDTH/2 + RobotConfig.LENGTH/2)/MM_PER_INCH,
+                        (RobotConfig.ROBOT_WIDTH/2)/MM_PER_INCH,
+                        (-Field.FIELD_ROBOT_WIDTH/2 + RobotConfig.ROBOT_LENGTH/2)/MM_PER_INCH,
                         Math.toRadians(90));
-        startingPoses[Alliance.Color.BLUE.ordinal()][StartingPosition.LEFT.ordinal()] =
+        startingPoses[Alliance.Color.BLUE.ordinal()][StartingPosition.Left.ordinal()] =
                 new Pose2d(
-                        (RobotConfig.WIDTH/2)/MM_PER_INCH,
-                        (Field.FIELD_WIDTH/2-RobotConfig.LENGTH/2)/MM_PER_INCH,
+                        (RobotConfig.ROBOT_WIDTH/2)/MM_PER_INCH,
+                        (Field.FIELD_ROBOT_WIDTH/2-RobotConfig.ROBOT_LENGTH/2)/MM_PER_INCH,
                         Math.toRadians(-90));
-        startingPoses[Alliance.Color.BLUE.ordinal()][StartingPosition.RIGHT.ordinal()] =
+        startingPoses[Alliance.Color.BLUE.ordinal()][StartingPosition.Right.ordinal()] =
                 new Pose2d(
-                        (-2*Field.TILE_WIDTH + RobotConfig.WIDTH/2)/MM_PER_INCH,
-                        (Field.FIELD_WIDTH/2-RobotConfig.LENGTH/2)/MM_PER_INCH,
+                        (-2*Field.TILE_ROBOT_WIDTH + RobotConfig.ROBOT_WIDTH/2)/MM_PER_INCH,
+                        (Field.FIELD_ROBOT_WIDTH/2-RobotConfig.ROBOT_LENGTH/2)/MM_PER_INCH,
                         Math.toRadians(-90));
     }
     public static final Pose2d[][] hubDeliveryPoses = new Pose2d[Alliance.Color.values().length][StartingPosition.values().length];
     {
-        hubDeliveryPoses[Alliance.Color.RED.ordinal()][StartingPosition.LEFT.ordinal()] =
+        hubDeliveryPoses[Alliance.Color.RED.ordinal()][StartingPosition.Left.ordinal()] =
                 new Pose2d(
-                        -1.5*Field.TILE_WIDTH/MM_PER_INCH,
-                        -Field.TILE_WIDTH/MM_PER_INCH,
+                        -42.5,
+                        -24.0,
                         Math.toRadians(180));
-        hubDeliveryPoses[Alliance.Color.RED.ordinal()][StartingPosition.RIGHT.ordinal()] =
+        hubDeliveryPoses[Alliance.Color.RED.ordinal()][StartingPosition.Right.ordinal()] =
                 new Pose2d(
                         0,
-                        -2*Field.TILE_WIDTH/MM_PER_INCH,
+                        -2*Field.TILE_ROBOT_WIDTH/MM_PER_INCH,
                         Math.toRadians(135));
-        hubDeliveryPoses[Alliance.Color.BLUE.ordinal()][StartingPosition.LEFT.ordinal()] =
+        hubDeliveryPoses[Alliance.Color.BLUE.ordinal()][StartingPosition.Left.ordinal()] =
                 new Pose2d(
                         0,
-                        2*Field.TILE_WIDTH/MM_PER_INCH,
+                        2*Field.TILE_ROBOT_WIDTH/MM_PER_INCH,
                         Math.toRadians(-135));
-        hubDeliveryPoses[Alliance.Color.BLUE.ordinal()][StartingPosition.RIGHT.ordinal()] =
+        hubDeliveryPoses[Alliance.Color.BLUE.ordinal()][StartingPosition.Right.ordinal()] =
                 new Pose2d(
-                        -1.5*Field.TILE_WIDTH/MM_PER_INCH,
-                        Field.TILE_WIDTH/MM_PER_INCH,
+                        -42.5,
+                        24,
                         Math.toRadians(0));
     }
     public static final Pose2d[] spinningPoses = new Pose2d[Alliance.Color.values().length];
@@ -97,59 +100,80 @@ public class Field {
     public void init(Alliance.Color alliance, StartingPosition startingPosition) {
         startingPose = startingPoses[alliance.ordinal()][startingPosition.ordinal()];
         Thread initThread = new Thread(() -> {
-            RobotLog.i("SilverTitans: Field initialization started");
+            Match.log("Field initialization started for "
+                    + alliance.toString() + ", " + startingPosition.toString());
             if (alliance == Alliance.Color.RED) {
-                if (startingPosition == StartingPosition.LEFT) {
+                if (startingPosition == StartingPosition.Left) {
                     reachCarouselTrajectory =
-                            MecanumDriveTrain.trajectoryBuilder(startingPoses[alliance.ordinal()][startingPosition.ordinal()])
+                            trajectoryBuilder(startingPoses[alliance.ordinal()][startingPosition.ordinal()])
                                     .splineToLinearHeading(spinningPoses[alliance.ordinal()], 0).build();
+                    Thread.yield();
+                    Match.log("Created reach carousel trajectory");
                     reachHubTrajectory =
-                            MecanumDriveTrain.trajectoryBuilder(reachCarouselTrajectory.end(), true)
+                            trajectoryBuilder(reachCarouselTrajectory.end(), true)
                                     .splineTo(new Vector2d(-54.0, -24.0), Math.toRadians(0.0))
-                                    .splineTo(new Vector2d(-36.0, -24.0), 0)
+                                    .splineTo(new Vector2d(-41.5, -24.0), 0)
                                     .build();
-                    navigateTrajectory = MecanumDriveTrain.trajectoryBuilder(reachHubTrajectory.end())
+                    Thread.yield();
+                    Match.log("Created reach hub trajectory");
+                    navigateTrajectory = trajectoryBuilder(reachHubTrajectory.end())
                             .splineToConstantHeading(new Vector2d(-48.0, -24.0), Math.toRadians(180.0))
                             .splineToConstantHeading(new Vector2d(-60.0, -35.5), Math.toRadians(180.0))
                             .build();
+                    Thread.yield();
+                    Match.log("Created navigation trajectory");
                 }
-                else {
+                else { //Red Right
                     reachHubTrajectory =
-                            MecanumDriveTrain.trajectoryBuilder(startingPoses[alliance.ordinal()][startingPosition.ordinal()])
-                                    .splineToConstantHeading(new Vector2d(-12.0, -48.0), Math.toRadians(90.0))
+                            trajectoryBuilder(startingPoses[alliance.ordinal()][startingPosition.ordinal()])
+                                    .splineTo(new Vector2d(0.0, -55.0), Math.toRadians(-90.0))
+                                    .splineToLinearHeading(new Pose2d(-12.0, -44.0, Math.toRadians(-90.0)), 0.0)
                                     .build();
-                    navigateTrajectory = MecanumDriveTrain.trajectoryBuilder(reachHubTrajectory.end())
-                            .splineTo(new Vector2d(0.0, -49.0), Math.toRadians(0.0))
-                            .splineTo(new Vector2d(30.0, -45.75), 0.0)
-                            .splineTo(new Vector2d(60.0, -45.75), 0.0)
+                    Thread.yield();
+                    Match.log("Created reach hub trajectory");
+                    navigateTrajectory = trajectoryBuilder(reachHubTrajectory.end())
+                            .splineTo(reachHubTrajectory.end().vec().minus(new Vector2d(0.0, 9.0)), reachHubTrajectory.end().getHeading())
+                            .splineTo(new Vector2d(12.0, -48.0), Math.toRadians(0.0))
                             .build();
+                    Thread.yield();
+                    Match.log("Created navigation trajectory");
                 }
             }
             if (alliance == Alliance.Color.BLUE) {
-                if (startingPosition == StartingPosition.RIGHT) {
+                if (startingPosition == StartingPosition.Right) {
                     reachCarouselTrajectory =
-                            MecanumDriveTrain.trajectoryBuilder(startingPoses[alliance.ordinal()][startingPosition.ordinal()])
+                            trajectoryBuilder(startingPoses[alliance.ordinal()][startingPosition.ordinal()])
                                     .splineToLinearHeading(spinningPoses[alliance.ordinal()], 0).build();
+                    Thread.yield();
+                    Match.log("Created reach carousel trajectory");
                     reachHubTrajectory =
-                            MecanumDriveTrain.trajectoryBuilder(reachCarouselTrajectory.end(), true)
+                            trajectoryBuilder(reachCarouselTrajectory.end(), true)
                                     .splineTo(new Vector2d(-54.0, 24.0), Math.toRadians(0.0))
-                                    .splineTo(new Vector2d(-36.0, 24.0), 0)
+                                    .splineTo(new Vector2d(-41.5, 24.0), 0)
                                     .build();
-                    navigateTrajectory = MecanumDriveTrain.trajectoryBuilder(reachHubTrajectory.end())
+                    Thread.yield();
+                    Match.log("Created reach hub trajectory");
+                    navigateTrajectory = trajectoryBuilder(reachHubTrajectory.end())
                             .splineToConstantHeading(new Vector2d(-48.0, 24.0), Math.toRadians(180.0))
                             .splineToConstantHeading(new Vector2d(-60.0, 35.5), Math.toRadians(180.0))
                             .build();
+                    Thread.yield();
+                    Match.log("Created navigation trajectory");
                 }
-                else {
+                else { //Blue Left
                     reachHubTrajectory =
-                            MecanumDriveTrain.trajectoryBuilder(startingPoses[alliance.ordinal()][startingPosition.ordinal()])
-                                    .splineToConstantHeading(new Vector2d(-12.0, 48.0), Math.toRadians(-90.0))
+                            trajectoryBuilder(startingPoses[alliance.ordinal()][startingPosition.ordinal()])
+                                    .splineTo(new Vector2d(0.0, 55.0), Math.toRadians(90.0))
+                                    .splineToLinearHeading(new Pose2d(-12.0, 44.0, Math.toRadians(90.0)), 0.0)
                                     .build();
-                    navigateTrajectory = MecanumDriveTrain.trajectoryBuilder(reachHubTrajectory.end())
-                            .splineTo(new Vector2d(0.0, 49.0), Math.toRadians(0.0))
-                            .splineTo(new Vector2d(30.0, 45.75), 0.0)
-                            .splineTo(new Vector2d(60.0, 45.75), 0.0)
+                    Thread.yield();
+                    Match.log("Created reach hub trajectory");
+                    navigateTrajectory = trajectoryBuilder(reachHubTrajectory.end())
+                            .splineTo(reachHubTrajectory.end().vec().plus(new Vector2d(0.0, 9.0)), reachHubTrajectory.end().getHeading())
+                            .splineTo(new Vector2d(12.0, 48.0), Math.toRadians(0.0))
                             .build();
+                    Thread.yield();
+                    Match.log("Created navigation trajectory");
                 }
             }
 

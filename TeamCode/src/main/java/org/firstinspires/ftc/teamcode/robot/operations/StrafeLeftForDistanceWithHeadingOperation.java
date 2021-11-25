@@ -2,7 +2,7 @@ package org.firstinspires.ftc.teamcode.robot.operations;
 
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.teamcode.game.Field;
-import org.firstinspires.ftc.teamcode.robot.components.drivetrain.MecanumDriveTrain;
+import org.firstinspires.ftc.teamcode.robot.components.drivetrain.DriveTrain;
 
 import java.util.Date;
 import java.util.Locale;
@@ -15,9 +15,9 @@ public class StrafeLeftForDistanceWithHeadingOperation extends Operation {
     private double distance;
     private double speed;
     private double heading;
-    MecanumDriveTrain driveTrain;
+    DriveTrain driveTrain;
 
-    public StrafeLeftForDistanceWithHeadingOperation(double distance, double heading, double speed, MecanumDriveTrain driveTrain, String title) {
+    public StrafeLeftForDistanceWithHeadingOperation(double distance, double heading, double speed, DriveTrain driveTrain, String title) {
         this.distance = distance;
         this.heading = heading;
         this.speed = speed;
@@ -40,7 +40,7 @@ public class StrafeLeftForDistanceWithHeadingOperation extends Operation {
         else {
             // adjust relative SPEED based on desiredHeading error.
             double bearingError = AngleUnit.normalizeDegrees(heading - Math.toDegrees(driveTrain.getExternalHeading()));
-            double steer = MecanumDriveTrain.getSteer(bearingError, MecanumDriveTrain.P_DRIVE_COEFF);
+            double steer = DriveTrain.getSteer(bearingError, DriveTrain.P_DRIVE_COEFFICIENT);
 
             // if driving in reverse, the motor correction also needs to be reversed
             if (distance < 0)

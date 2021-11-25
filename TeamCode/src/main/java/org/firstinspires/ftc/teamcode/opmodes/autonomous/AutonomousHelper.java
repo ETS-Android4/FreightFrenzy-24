@@ -11,6 +11,7 @@ import org.firstinspires.ftc.teamcode.robot.operations.State;
 
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.Locale;
 
 public abstract class AutonomousHelper extends OpMode {
     protected Match match;
@@ -23,19 +24,25 @@ public abstract class AutonomousHelper extends OpMode {
 
     Date initStartTime;
 
+    boolean cameraPoseSet = false;
+    boolean aPressed;
+    boolean statesAdded = false;
+
     /*
      * Code to run ONCE when the driver hits INIT
      */
     public void init(Alliance.Color alliance, Field.StartingPosition startingPosition) {
-
         initStartTime = new Date();
+        cameraPoseSet = false;
+        aPressed = false;
+        statesAdded = false;
 
         AutoTransitioner.transitionOnStop(this, "Phoebe: Driver Controlled");
 
         this.match = Match.getNewInstance();
         Match.log("Created new match, initializing it");
         match.init();
-        Match.log("Match initialized, setting alliance to " + Alliance.Color.RED + " and starting position to " + Field.StartingPosition.RIGHT);
+        Match.log("Match initialized, setting alliance to " + Alliance.Color.RED + " and starting position to " + Field.StartingPosition.Right);
         match.setAlliance(alliance);
         match.setStartingPosition(startingPosition);
         field = match.getField();
@@ -46,7 +53,6 @@ public abstract class AutonomousHelper extends OpMode {
         this.robot.init(hardwareMap, telemetry, match);
         initialOperationsDone = false;
         Match.log("Robot initialized");
-
         telemetry.update();
     }
     /*
@@ -58,36 +64,41 @@ public abstract class AutonomousHelper extends OpMode {
             //RobotLog.i("SilverTitans: Initializing trajectories, please wait");
             telemetry.addData("Status", "Trajectories initializing, please wait. " +
                     (30 - (int)(new Date().getTime() - initStartTime.getTime())/1000));
+            telemetry.addData("VSLAM", robot.getVSLAMStatus());
         }
         else if (robot.fullyInitialized()) {
-            if (!initialOperationsDone) {
-                initialOperationsDone = true;
-                robot.setPose(field.getStartingPose());
-            }
-            else if (!robot.havePosition()) {
+            if (!robot.havePosition()) {
+                robot.startVSLAM();
                 telemetry.addData("Status", "VSLAM initializing, please wait");
+                telemetry.addData("VSLAM", robot.getVSLAMStatus());
             }
-            else if (robot.allOperationsCompleted()) {
-                    double xError = robot.getCurrentX() / Field.MM_PER_INCH - field.getStartingPose().getX();
-                    double yError = robot.getCurrentY() / Field.MM_PER_INCH - field.getStartingPose().getY();
-                    double bearingError = (Math.toDegrees(robot.getCurrentTheta())
-                            - Math.toDegrees(field.getStartingPose().getHeading())) % 360;
-                    if ((Math.abs(xError) > RobotConfig.ALLOWED_POSITIONAL_ERROR)
-                            || (Math.abs(yError) > RobotConfig.ALLOWED_POSITIONAL_ERROR
-                            || (Math.abs(bearingError) > RobotConfig.ALLOWED_BEARING_ERROR))) {
-                        telemetry.addData("Status", String.format("Position Error:%s v/s %s, xErr:%.2f, yErr:%.2f, hErr:%.2f",
-                                field.getStartingPose(),
-                                robot.getPosition(),
-                                xError,
-                                yError,
-                                bearingError));
-                        robot.setPose(field.getStartingPose());
-                    } else {
-                        match.updateTelemetry(telemetry,"Ready, let's go");
-                    }
+            else if (!cameraPoseSet) {
+                    telemetry.addData("Status", "Setting position, please wait");
+                    telemetry.addData("VSLAM", robot.getVSLAMStatus());
+                    cameraPoseSet = robot.setInitialPose(field.getStartingPose());
             }
             else {
-                telemetry.addData("Status", "Waiting for initial operations, please wait");
+                double xError = robot.getCurrentX() / Field.MM_PER_INCH - field.getStartingPose().getX();
+                double yError = robot.getCurrentY() / Field.MM_PER_INCH - field.getStartingPose().getY();
+                double bearingError = (Math.toDegrees(robot.getCurrentTheta())
+                        - Math.toDegrees(field.getStartingPose().getHeading())) % 360;
+                if ((Math.abs(xError) > RobotConfig.ALLOWED_POSITIONAL_ERROR)
+                        || (Math.abs(yError) > RobotConfig.ALLOWED_POSITIONAL_ERROR
+                        || (Math.abs(bearingError) > RobotConfig.ALLOWED_BEARING_ERROR))) {
+                    telemetry.addData("Status", String.format(Locale.getDefault(),
+                            "Position Error, restart app:%s v/s %s, xErr:%.2f, yErr:%.2f, hErr:%.2fvs%.2f=%.2f",
+                            field.getStartingPose(),
+                            robot.getPosition(),
+                            xError,
+                            yError,
+                            Math.toDegrees(robot.getCurrentTheta()),
+                            Math.toDegrees(field.getStartingPose().getHeading()),
+                            bearingError));
+                    telemetry.addData("VSLAM", robot.getVSLAMStatus());
+                } else {
+                    match.setBarcodeLevel(robot.getBarCodeLevel());
+                    match.updateTelemetry(telemetry, "Ready, let's go");
+                }
             }
         }
         else {
@@ -99,23 +110,33 @@ public abstract class AutonomousHelper extends OpMode {
     @Override
     public void start() {
         match.setStart();
+        robot.setInitialOutputPosition();
     }
 
+    /**
+     * We go through our specified desired states in this method.
+     * Loop through the states, checking if a state is reached, if it is not reached, queue
+     *         it if not already queued
+     */
     @Override
     public void loop() {
-        for (State state: states) {
+        /*
+        Check states sequentially. Skip over reached states and queue those that have not
+        been reached and not yet queued
+         */
+        for (State state : states) {
             if (!state.isReached(robot)) {
-                if (!state.isQueued()) {
+                if (state.isQueued()) {
+                    match.updateTelemetry(telemetry, "Attempting " + state.getTitle());
+                } else {
+                    //queue state if it has not been queued
+                    match.updateTelemetry(telemetry, "Queueing " + state.getTitle());
+                    Match.log("Queueing state: " + state.getTitle());
                     state.queue(robot);
                 }
+                break;
             }
         }
-        match.updateTelemetry(telemetry, "Autonomous");
-    }
-
-    protected void queueRingDetermination() {
-        //generate the rest of the trajectories - hopefully this completes before we are done depositing first wobble
-        match.getField().generateTrajectories();
     }
 
     @Override

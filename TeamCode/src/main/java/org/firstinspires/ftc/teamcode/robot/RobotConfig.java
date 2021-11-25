@@ -8,28 +8,42 @@ public class RobotConfig {
     public static final String LEFT_REAR_DRIVE = "leftRearDrive";
     public static final String RIGHT_REAR_DRIVE = "rightRearDrive";
     public static final String RIGHT_FRONT_DRIVE = "rightFrontDrive";
-
     public static final String CAROUSEL_MOTOR = "carousel";
-
-    //camera servo
-    public static final String CAMERA_SERVO = "cameraServo";
-
-    //webcam id
     public static final String WEBCAM_ID = "Webcam 1";
-    public static final double WIDTH = 17.5* Field.MM_PER_INCH;
-    public static final double LENGTH = 17.5* Field.MM_PER_INCH;
+    public static final String BLINKIN = "blinkin";
+
+    public static final String IN_MOTOR = "inMotor";
+    public static final String IN_SERVO = "inServo";
+
+    public static final String OUT_SHOULDER = "outShoulder";
+    public static final String OUT_ELBOW = "outElbow";
+    public static final String OUT_GRIPPER = "outGripper";
+
+    public static final double ROBOT_WIDTH = 17.5* Field.MM_PER_INCH;
+    public static final double ROBOT_LENGTH = 17.5* Field.MM_PER_INCH;
     public static final double ALLOWED_BEARING_ERROR = 0.5;
     public static final double ALLOWED_POSITIONAL_ERROR = .25;
     public static final double SUPER_CAUTIOUS_SPEED = 0.2;
     public static final double REGULAR_SPEED = 0.6;
-    public static final String ARM_MOTOR = "armMotor";
-    public static final int ARM_MOTOR_INCREMENT = 10;
-    public static final double ARM_SERVO_INCREMENT = .01;
-    public static final String ARM_SERVO = "armServo";
 
-    public static final double MAX_CAROUSEL_SPEED = 0.6;
-    public static final String BLINKIN = "blinkin";
-    public static final long CAROUSEL_SPINNER_REQUIRED_TIME = 2000; //2 seconds to spin carousel for delivery
-    public static final String INOUT_TAKE_MOTOR = "inoutMotor";
-    public static final double MAX_INOUT_SPEED = 1.0;
+    public static final double INTAKE_SPEED = 1.0;
+    public static final double INTAKE_SERVO_INCREMENT = .001;
+    public static final double INTAKE_LOWERED_POSITION = .542;
+    public static final double INTAKE_RAISED_POSITION = .213;
+    public static final double MAX_IN_SPEED = 1.0;
+
+    public static final double ARM_SERVO_INCREMENT = .01;
+
+    public static final double MAX_CAROUSEL_SPEED = 0.1;
+    public static final long CAROUSEL_SPINNER_REQUIRED_TIME = 3000; //3 seconds to spin carousel for delivery
+
+    public static final double MAX_OUT_SPEED = 1.0;
+    public static final double OUT_ALIGNER_SERVO_INCREMENT = .001;
+    public static final double OUT_ALIGNER_FOLDED_POSITION = 0;
+    public static final double OUT_ALIGNER_TOP_POSITION = 0.218;
+    public static final double OUT_ALIGNER_MIDDLE_POSITION = 0.386;
+    public static final double OUT_ALIGNER_BOTTOM_POSITION = 0.53;
+    public static final long OUTPUT_LEVEL_REQUIRED_TIME = 300; //300 milli-seconds to reach level
+    public static final int DELIVERY_ENCODER_VALUE = 527;
+    public static final int INTAKE_ENCODER_VALUE = 0;
 }
