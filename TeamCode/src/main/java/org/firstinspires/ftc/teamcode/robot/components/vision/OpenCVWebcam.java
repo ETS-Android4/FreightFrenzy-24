@@ -31,10 +31,12 @@ import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.teamcode.game.Alliance;
 import org.firstinspires.ftc.teamcode.game.Match;
 import org.firstinspires.ftc.teamcode.robot.RobotConfig;
+import org.jetbrains.annotations.TestOnly;
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfPoint;
 import org.opencv.core.Rect;
 import org.opencv.core.Scalar;
+import org.opencv.imgcodecs.Imgcodecs;
 import org.opencv.imgproc.Imgproc;
 import org.openftc.easyopencv.OpenCvCamera;
 import org.openftc.easyopencv.OpenCvCameraFactory;
@@ -54,12 +56,12 @@ public class OpenCVWebcam {
     public static final Scalar BOX_COLOR_MAX = new Scalar(22, 255, 255);
     public static final Scalar SILVER_COLOR_MIN = new Scalar(220, 0, 128);
     public static final Scalar SILVER_COLOR_MAX = new Scalar(255, 20, 220);
-    public static final Scalar ELEMENT_COLOR_MIN = new Scalar(0, 0, 168);
-    public static final Scalar ELEMENT_COLOR_MAX = new Scalar(172, 111, 255);
+    public static final Scalar ELEMENT_COLOR_MIN = new Scalar(0, 0, 205);
+    public static final Scalar ELEMENT_COLOR_MAX = new Scalar(255, 45, 255);
 
     public static final int Y_PIXEL_COUNT = 1920;
     public static final int X_PIXEL_COUNT = 1080;
-    public static final int MINIMUM_AREA = 100;
+    public static final int MINIMUM_AREA = 200;
 
     OpenCvWebcam webcam;
     Pipeline pipeline;
@@ -67,7 +69,11 @@ public class OpenCVWebcam {
     Scalar colorMax;
 
     public static final Object synchronizer = new Object();
-
+    @TestOnly
+    public static void main(String[] args) {
+        Imgcodecs imgcodecs = new Imgcodecs();
+        Mat input = imgcodecs.imread("~/Desktop/teagan");
+    }
     public void init(HardwareMap hardwareMap, Telemetry telemetry, Scalar colorMin, Scalar colorMax) {
         this.colorMin = colorMin;
         this.colorMax = colorMax;
@@ -188,10 +194,10 @@ public class OpenCVWebcam {
     public void decrementMaxSaturation() {pipeline.contourDetector.decrementMaxSaturation();}
     public void incrementMinSaturation() {pipeline.contourDetector.incrementMinSaturation();}
     public void incrementMaxSaturation() {pipeline.contourDetector.incrementMaxSaturation();}
-    public void decrementMinValue() {pipeline.contourDetector.decrementMinSaturation();}
-    public void decrementMaxValue() {pipeline.contourDetector.decrementMaxSaturation();}
-    public void incrementMinValue() {pipeline.contourDetector.incrementMinSaturation();}
-    public void incrementMaxValue() {pipeline.contourDetector.incrementMaxSaturation();}
+    public void decrementMinValue() {pipeline.contourDetector.decrementMinValue();}
+    public void decrementMaxValue() {pipeline.contourDetector.decrementMaxValue();}
+    public void incrementMinValue() {pipeline.contourDetector.incrementMinValue();}
+    public void incrementMaxValue() {pipeline.contourDetector.incrementMaxValue();}
 
     public String getBounds() {
         return (pipeline.contourDetector.getBounds());
@@ -252,24 +258,23 @@ public class OpenCVWebcam {
      */
     public int getBarCodeLevel() {
         if (Match.getInstance().getAlliance() == Alliance.Color.RED) {
-            if (getMinY() > 1100) {
-                return 1;
-            } else if (getMinY() > 500) {
-                return 2;
+            if (seeingObject()) {
+                if (getMinY() > 650) {
+                    return 1;
+                } else if (getMinY() > 200) {
+                    return 2;
+                }
             }
-            else {
-                return 3;
-            }
-        }
-        else {
-            if (!seeingObject()) {
-                return 1;
-            } else if (getMinY() < 800) {
-                return 3;
-            } else {
-                return 2;
+        } else {
+            if (seeingObject()) {
+                if (getMinY() < 800) {
+                    return 1;
+                } else if (getMinY() < 1400) {
+                    return 2;
+                }
             }
         }
+        return 3;
     }
 
     public class Pipeline extends OpenCvPipeline {
@@ -287,7 +292,7 @@ public class OpenCVWebcam {
         final Scalar SILVER = new Scalar(192, 192, 192);
 
         public ContourDetector contourDetector = new ContourDetector(colorMin, colorMax,
-                860, 1080, 0, 1700);
+                530, 1080, 0, 1920);
 
         @Override
         public Mat processFrame(Mat input) {

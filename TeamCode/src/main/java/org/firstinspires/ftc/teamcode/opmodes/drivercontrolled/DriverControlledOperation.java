@@ -37,7 +37,6 @@ import com.qualcomm.robotcore.util.RobotLog;
 import org.firstinspires.ftc.teamcode.game.Alliance;
 import org.firstinspires.ftc.teamcode.game.Match;
 import org.firstinspires.ftc.teamcode.robot.Robot;
-import org.firstinspires.ftc.teamcode.robot.operations.OutputOperation;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
@@ -125,15 +124,6 @@ public class DriverControlledOperation extends OpMode {
                 RobotLog.e("TeleOp run", e, "Error");
             }
         }
-    }
-
-    @Override
-    public void start() {
-        robot.queueTertiaryOperation
-            (new OutputOperation(
-                robot.getOutPutter(),
-                OutputOperation.Type.Fold,
-                "Fold"));
     }
 
     /*

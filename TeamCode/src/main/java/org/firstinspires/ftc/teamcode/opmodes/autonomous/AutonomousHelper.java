@@ -40,9 +40,9 @@ public abstract class AutonomousHelper extends OpMode {
         AutoTransitioner.transitionOnStop(this, "Phoebe: Driver Controlled");
 
         this.match = Match.getNewInstance();
-        Match.log("Created new match, initializing it");
         match.init();
-        Match.log("Match initialized, setting alliance to " + Alliance.Color.RED + " and starting position to " + Field.StartingPosition.Right);
+        Match.log("Match initialized, setting alliance to " + alliance
+                + " and starting position to " + startingPosition);
         match.setAlliance(alliance);
         match.setStartingPosition(startingPosition);
         field = match.getField();
@@ -60,22 +60,26 @@ public abstract class AutonomousHelper extends OpMode {
      */
     @Override
     public void init_loop() {
-        if (!Field.isInitialized()) {
+        if (Field.isNotInitialized()) {
             //RobotLog.i("SilverTitans: Initializing trajectories, please wait");
             telemetry.addData("Status", "Trajectories initializing, please wait. " +
                     (30 - (int)(new Date().getTime() - initStartTime.getTime())/1000));
             telemetry.addData("VSLAM", robot.getVSLAMStatus());
         }
         else if (robot.fullyInitialized()) {
+            match.setBarcodeLevel(robot.getBarCodeLevel());
             if (!robot.havePosition()) {
                 robot.startVSLAM();
-                telemetry.addData("Status", "VSLAM initializing, please wait");
+                telemetry.addData("Status", "VSLAM initializing, please wait.");
                 telemetry.addData("VSLAM", robot.getVSLAMStatus());
+                telemetry.addData("Barcode", match.getBarcodeLevel());
             }
             else if (!cameraPoseSet) {
-                    telemetry.addData("Status", "Setting position, please wait");
-                    telemetry.addData("VSLAM", robot.getVSLAMStatus());
-                    cameraPoseSet = robot.setInitialPose(field.getStartingPose());
+                telemetry.addData("Status", "Setting position, please wait");
+                telemetry.addData("VSLAM", robot.getVSLAMStatus());
+                telemetry.addData("Barcode", match.getBarcodeLevel());
+                robot.setInitialPose(field.getStartingPose());
+                cameraPoseSet = true;
             }
             else {
                 double xError = robot.getCurrentX() / Field.MM_PER_INCH - field.getStartingPose().getX();
@@ -85,7 +89,7 @@ public abstract class AutonomousHelper extends OpMode {
                 if ((Math.abs(xError) > RobotConfig.ALLOWED_POSITIONAL_ERROR)
                         || (Math.abs(yError) > RobotConfig.ALLOWED_POSITIONAL_ERROR
                         || (Math.abs(bearingError) > RobotConfig.ALLOWED_BEARING_ERROR))) {
-                    telemetry.addData("Status", String.format(Locale.getDefault(),
+                    String positionError = String.format(Locale.getDefault(),
                             "Position Error, restart app:%s v/s %s, xErr:%.2f, yErr:%.2f, hErr:%.2fvs%.2f=%.2f",
                             field.getStartingPose(),
                             robot.getPosition(),
@@ -93,10 +97,11 @@ public abstract class AutonomousHelper extends OpMode {
                             yError,
                             Math.toDegrees(robot.getCurrentTheta()),
                             Math.toDegrees(field.getStartingPose().getHeading()),
-                            bearingError));
+                            bearingError);
+                    telemetry.addData("Status", positionError);
                     telemetry.addData("VSLAM", robot.getVSLAMStatus());
+                    telemetry.addData("Barcode", match.getBarcodeLevel());
                 } else {
-                    match.setBarcodeLevel(robot.getBarCodeLevel());
                     match.updateTelemetry(telemetry, "Ready, let's go");
                 }
             }
@@ -110,7 +115,6 @@ public abstract class AutonomousHelper extends OpMode {
     @Override
     public void start() {
         match.setStart();
-        robot.setInitialOutputPosition();
     }
 
     /**

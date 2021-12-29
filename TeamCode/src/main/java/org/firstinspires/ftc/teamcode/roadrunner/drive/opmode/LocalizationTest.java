@@ -1,11 +1,13 @@
 package org.firstinspires.ftc.teamcode.roadrunner.drive.opmode;
 
+import com.acmerobotics.dashboard.FtcDashboard;
+import com.acmerobotics.dashboard.telemetry.MultipleTelemetry;
 import com.acmerobotics.roadrunner.geometry.Pose2d;
-import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
+import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
-import com.qualcomm.robotcore.hardware.DcMotor;
 
 import org.firstinspires.ftc.teamcode.roadrunner.drive.SampleMecanumDrive;
+import org.firstinspires.ftc.teamcode.robot.components.vision.VslamCamera;
 
 /**
  * This is a simple teleop routine for testing localization. Drive the robot around like a normal
@@ -15,31 +17,44 @@ import org.firstinspires.ftc.teamcode.roadrunner.drive.SampleMecanumDrive;
  * encoder localizer heading may be significantly off if the track width has not been tuned).
  */
 @TeleOp(group = "drive")
-public class LocalizationTest extends LinearOpMode {
+public class LocalizationTest extends OpMode {
+    SampleMecanumDrive drive;
+    VslamCamera camera;
+
     @Override
-    public void runOpMode() throws InterruptedException {
-        SampleMecanumDrive drive = new SampleMecanumDrive(hardwareMap);
+    public void init() {
+        telemetry = new MultipleTelemetry(telemetry, FtcDashboard.getInstance().getTelemetry());
+        camera = new VslamCamera(hardwareMap);
+        drive = new SampleMecanumDrive(hardwareMap, camera);
+    }
 
-        drive.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-
-        waitForStart();
-
-        while (!isStopRequested()) {
-            drive.setWeightedDrivePower(
-                    new Pose2d(
-                            -gamepad1.left_stick_y,
-                            -gamepad1.left_stick_x,
-                            -gamepad1.right_stick_x
-                    )
-            );
-
-            drive.update();
-
-            Pose2d poseEstimate = drive.getPoseEstimate();
-            telemetry.addData("x", poseEstimate.getX());
-            telemetry.addData("y", poseEstimate.getY());
-            telemetry.addData("heading", poseEstimate.getHeading());
-            telemetry.update();
+    @Override
+    public void init_loop() {
+        if (camera.havePosition()) {
+            telemetry.addData("Status", "Ready, let's go");
         }
+        else {
+            telemetry.addData("Waiting for vslam", "Please wait");
+        }
+        telemetry.addData("VSLAM", camera.getStatus());
+        telemetry.update();
+    }
+    @Override
+    public void loop() {
+        drive.setWeightedDrivePower(
+                new Pose2d(
+                        -gamepad1.left_stick_y,
+                        -gamepad1.left_stick_x,
+                        -gamepad1.right_stick_x
+                )
+        );
+
+        drive.update();
+
+        Pose2d poseEstimate = drive.getPoseEstimate();
+        telemetry.addData("x", poseEstimate.getX());
+        telemetry.addData("y", poseEstimate.getY());
+        telemetry.addData("heading", poseEstimate.getHeading());
+        telemetry.update();
     }
 }

@@ -53,7 +53,7 @@ public class TestT265Camera extends OpMode
 
     @Override
     public void init_loop() {
-        if (!Field.isInitialized()) {
+        if (Field.isNotInitialized()) {
             telemetry.addData("Status", "Trajectories initializing, please wait");
         }
         else if (robot.fullyInitialized()) {

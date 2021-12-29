@@ -15,7 +15,7 @@ public class CarouselSpinner {
     }
 
     public void setSpeed(double speed) {
-        this.motor.setPower(speed);//Math.max((Math.min(speed, RobotConfig.MAX_CAROUSEL_SPEED)), -RobotConfig.MAX_CAROUSEL_SPEED));
+        this.motor.setPower(Math.max((Math.min(speed, RobotConfig.MAX_CAROUSEL_SPEED)), -RobotConfig.MAX_CAROUSEL_SPEED));
     }
 
     public void stop() {

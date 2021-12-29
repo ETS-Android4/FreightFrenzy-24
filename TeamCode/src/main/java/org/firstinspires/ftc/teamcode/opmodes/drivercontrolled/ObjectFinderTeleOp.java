@@ -21,6 +21,7 @@
 
 package org.firstinspires.ftc.teamcode.opmodes.drivercontrolled;
 
+import com.qualcomm.hardware.rev.RevBlinkinLedDriver;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
 import org.firstinspires.ftc.teamcode.robot.components.vision.OpenCVWebcam;
@@ -29,23 +30,40 @@ import org.opencv.core.Scalar;
 @TeleOp(name = "Phoebe: Freight Finder", group = "Phoebe")
 
 public class ObjectFinderTeleOp extends DriverControlledOperation {
+    public enum Mode {
+        Hue, Saturation, Value
+    }
     OpenCVWebcam webcam;
-    boolean dpad1LeftPressed, dpad2LeftPressed, dpad1RightPressed, dpad2RightPressed,
-        dpad1UpPressed, dpad2UpPressed, dpad1DownPressed, dpad2DownPressed;
+    boolean dpad2LeftPressed;
+    boolean dpad2RightPressed;
+    boolean dpad2UpPressed;
+    boolean dpad2DownPressed;
+    Mode mode;
+
     @Override
     public void init() {
         super.init();
         webcam = robot.getWebcam();
+        robot.setPattern(RevBlinkinLedDriver.BlinkinPattern.WHITE);
+        mode = Mode.Hue;
     }
+
     public void startStreaming(Scalar colorMin, Scalar colorMax) {
         webcam.init(hardwareMap, telemetry, colorMin, colorMax);
     }
+
     @Override
     public void start() {
         startStreaming(OpenCVWebcam.BOX_COLOR_MIN, OpenCVWebcam.BOX_COLOR_MAX);
     }
+
     @Override
     public void loop() {
+        telemetry.addData("Mode", mode.toString() + " A/B/Y for H/S/V");
+        telemetry.addData("Lt/Rt;Up/Dn", "+/- min; +/- max");
+        telemetry.addData("LeftStick x/y", "Control min/max x");
+        telemetry.addData("RightStick x/y", "Control min/max y");
+        telemetry.addData("Bounds", webcam.getBounds());
         if (webcam.seeingObject()) {
             telemetry.addData("Object", "%d-%d, %d-%d",
                     webcam.getMinX(), webcam.getMaxX(), webcam.getMinY(), webcam.getMaxY()
@@ -53,27 +71,29 @@ public class ObjectFinderTeleOp extends DriverControlledOperation {
             telemetry.addData("Largest contour area", "%.0f", webcam.getLargestArea());
             telemetry.addData("Barcode", robot.getBarCodeLevel());
         }
-        telemetry.addData("Bounds", webcam.getBounds());
 
         telemetry.update();
+
+        //handle left joystick
         if (gamepad2.left_stick_x < -0.2) {
             webcam.decrementMinX();
         }
         if (gamepad2.left_stick_x > 0.2) {
             webcam.incrementMinX();
         }
-        if (gamepad2.right_stick_x < -0.2) {
-            webcam.decrementMaxX();
-        }
-        if (gamepad2.right_stick_x > 0.2) {
-            webcam.incrementMaxX();
-        }
-
         if (gamepad2.left_stick_y < -0.2) {
             webcam.decrementMinY();
         }
         if (gamepad2.left_stick_y > 0.2) {
             webcam.incrementMinY();
+        }
+
+        //handle right joystick
+        if (gamepad2.right_stick_x < -0.2) {
+            webcam.decrementMaxX();
+        }
+        if (gamepad2.right_stick_x > 0.2) {
+            webcam.incrementMaxX();
         }
         if (gamepad2.right_stick_y < -0.2) {
             webcam.decrementMaxY();
@@ -82,61 +102,33 @@ public class ObjectFinderTeleOp extends DriverControlledOperation {
             webcam.incrementMaxY();
         }
 
-        //handle left gamepad dpad to control saturation filters
-        if (gamepad1.dpad_left) {
-            if (!dpad1LeftPressed) {
-                webcam.decrementMinSaturation();
-                dpad1LeftPressed = true;
-            }
+        //handle a, b and y
+        if (gamepad2.a) {
+            mode = Mode.Hue;
         }
-        else {
-            dpad1LeftPressed = false;
+        else if (gamepad2.b) {
+            mode = Mode.Saturation;
         }
-
-        if (gamepad1.dpad_right) {
-            if (!dpad1RightPressed) {
-                webcam.incrementMinSaturation();
-                dpad1RightPressed = true;
-            }
-        }
-        else {
-            dpad1RightPressed = false;
+        else if (gamepad2.y) {
+            mode = Mode.Value;
         }
 
-        if (gamepad1.dpad_down) {
-            if (!dpad1DownPressed) {
-                webcam.decrementMaxSaturation();
-                dpad1DownPressed = true;
-            }
-        }
-        else {
-            dpad1DownPressed = false;
-        }
-        if (gamepad1.dpad_up) {
-            if (!dpad1UpPressed) {
-                webcam.incrementMaxSaturation();
-                dpad1UpPressed = true;
-            }
-        }
-        else {
-            dpad1UpPressed = false;
-        }
-
-        /**
-         * Controls:
-         * GamePad2
-         *  dpad left
-         *
-         */
-
-        //handle dpad of second game controller
+        //handle dpad to control mode specific filters filters
         if (gamepad2.dpad_left) {
             if (!dpad2LeftPressed) {
-                if (gamepad2.left_bumper) {
-                    webcam.decrementMinValue();
-                }
-                else {
-                    webcam.decrementMinHue();
+                switch (mode) {
+                    case Hue: {
+                        webcam.decrementMinHue();
+                        break;
+                    }
+                    case Saturation: {
+                        webcam.decrementMinSaturation();
+                        break;
+                    }
+                    case Value: {
+                        webcam.decrementMinValue();
+                        break;
+                    }
                 }
                 dpad2LeftPressed = true;
             }
@@ -147,11 +139,19 @@ public class ObjectFinderTeleOp extends DriverControlledOperation {
 
         if (gamepad2.dpad_right) {
             if (!dpad2RightPressed) {
-                if (gamepad2.left_bumper) {
-                    webcam.incrementMinValue();
-                }
-                else {
-                    webcam.incrementMinHue();
+                switch (mode) {
+                    case Hue: {
+                        webcam.incrementMinHue();
+                        break;
+                    }
+                    case Saturation: {
+                        webcam.incrementMinSaturation();
+                        break;
+                    }
+                    case Value: {
+                        webcam.incrementMinValue();
+                        break;
+                    }
                 }
                 dpad2RightPressed = true;
             }
@@ -162,11 +162,19 @@ public class ObjectFinderTeleOp extends DriverControlledOperation {
 
         if (gamepad2.dpad_down) {
             if (!dpad2DownPressed) {
-                if (gamepad2.left_bumper) {
-                    webcam.decrementMaxValue();
-                }
-                else {
-                    webcam.decrementMaxHue();
+                switch (mode) {
+                    case Hue: {
+                        webcam.decrementMaxHue();
+                        break;
+                    }
+                    case Saturation: {
+                        webcam.decrementMaxSaturation();
+                        break;
+                    }
+                    case Value: {
+                        webcam.decrementMaxValue();
+                        break;
+                    }
                 }
                 dpad2DownPressed = true;
             }
@@ -176,23 +184,25 @@ public class ObjectFinderTeleOp extends DriverControlledOperation {
         }
         if (gamepad2.dpad_up) {
             if (!dpad2UpPressed) {
-                if (gamepad2.left_bumper) {
-                    webcam.incrementMaxValue();
-                }
-                else {
-                    webcam.incrementMaxHue();
+                switch (mode) {
+                    case Hue: {
+                        webcam.incrementMaxHue();
+                        break;
+                    }
+                    case Saturation: {
+                        webcam.incrementMaxSaturation();
+                        break;
+                    }
+                    case Value: {
+                        webcam.incrementMaxValue();
+                        break;
+                    }
                 }
                 dpad2UpPressed = true;
             }
         }
         else {
             dpad2UpPressed = false;
-        }
-        if (gamepad1.left_stick_x < .2) {
-            webcam.decrementMinValue();
-        }
-        else if (gamepad1.left_stick_x > .2) {
-            webcam.incrementMinValue();
         }
     }
 

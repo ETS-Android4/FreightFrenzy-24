@@ -11,17 +11,17 @@ import org.opencv.imgproc.Imgproc;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 public class ContourDetector {
 
-    private static final String TAG = "ContourDetector";
     // Lower and Upper bounds for range checking in HSV color space
-    private Scalar mLowerBound = new Scalar(0);
-    private Scalar mUpperBound = new Scalar(0);
-    private Mat mSpectrum = new Mat();
+    private final Scalar mLowerBound = new Scalar(0);
+    private final Scalar mUpperBound = new Scalar(0);
+    private final Mat mSpectrum = new Mat();
     private MatOfPoint largestContour = null;
-    List<MatOfPoint> contoursFound = new ArrayList<MatOfPoint>();
-    List<MatOfPoint> contoursInRange = new ArrayList<MatOfPoint>();
+    List<MatOfPoint> contoursFound = new ArrayList<>();
+    List<MatOfPoint> contoursInRange = new ArrayList<>();
 
     double contourMaxArea = 0;
     public int contourMinY = 9999, contourMinX = 9999;
@@ -85,7 +85,8 @@ public class ContourDetector {
     }
 
     public String getBounds() {
-        return String.format("%.0f-%.0f,%.0f-%.0f,%.0f-%.0f, x:%d-%d, y:%d-%d",
+        return String.format(Locale.getDefault(),
+                "Hue:%.0f-%.0f,Sat:%.0f-%.0f,Val:%.0f-%.0f, x:%d-%d, y:%d-%d",
                 mLowerBound.val[0], mUpperBound.val[0], mLowerBound.val[1],
                 mUpperBound.val[1], mLowerBound.val[2], mUpperBound.val[2],
                 minAllowedX, maxAllowedX, minAllowedY, maxAllowedY);
@@ -167,7 +168,7 @@ public class ContourDetector {
 
     public double getHeightWidthRatio() {
         if (contourMaxArea > 0) {
-            return (double) getHeightInPixels() / (double) getWidthInPixels();
+            return getHeightInPixels() / getWidthInPixels();
         }
         return 0;
     }
@@ -328,5 +329,4 @@ public class ContourDetector {
     public double angleFromCenterOfRobot() {
         return Math.asin(distanceFromCenterOfRobot()*Math.sin(Math.toRadians(90) + angleToObjectFromCamera)/distanceToObjectFromCamera);
     }
-
 }

@@ -1,6 +1,7 @@
 package org.firstinspires.ftc.teamcode.robot;
 
 import org.firstinspires.ftc.teamcode.game.Field;
+import org.firstinspires.ftc.teamcode.roadrunner.drive.DriveConstants;
 
 public class RobotConfig {
     //drive train motors
@@ -14,13 +15,16 @@ public class RobotConfig {
 
     public static final String IN_MOTOR = "inMotor";
     public static final String IN_SERVO = "inServo";
+    public static final String IN_SENSOR = "inSensor";
 
     public static final String OUT_SHOULDER = "outShoulder";
     public static final String OUT_ELBOW = "outElbow";
-    public static final String OUT_GRIPPER = "outGripper";
+    public static final String BUCKET_LID = "outGripper";
 
-    public static final double ROBOT_WIDTH = 17.5* Field.MM_PER_INCH;
-    public static final double ROBOT_LENGTH = 17.5* Field.MM_PER_INCH;
+    public static double ROBOT_CENTER_FROM_BACK = (2.75 + DriveConstants.TRACK_LENGTH/2) *Field.MM_PER_INCH;
+    public static double ROBOT_CENTER_FROM_FRONT = (3.5 + DriveConstants.TRACK_LENGTH/2) *Field.MM_PER_INCH;
+    public static final double ROBOT_WIDTH = 11.325 * Field.MM_PER_INCH;
+    public static final double ROBOT_LENGTH = ROBOT_CENTER_FROM_BACK + ROBOT_CENTER_FROM_FRONT;
     public static final double ALLOWED_BEARING_ERROR = 0.5;
     public static final double ALLOWED_POSITIONAL_ERROR = .25;
     public static final double SUPER_CAUTIOUS_SPEED = 0.2;
@@ -28,22 +32,36 @@ public class RobotConfig {
 
     public static final double INTAKE_SPEED = 1.0;
     public static final double INTAKE_SERVO_INCREMENT = .001;
-    public static final double INTAKE_LOWERED_POSITION = .542;
-    public static final double INTAKE_RAISED_POSITION = .213;
+    public static final double INTAKE_LOWERED_POSITION = .635;
+    public static final double INTAKE_RAISED_POSITION = .35;
+    public static final double INTAKE_EXPEL_POSITION = .5;
     public static final double MAX_IN_SPEED = 1.0;
 
-    public static final double ARM_SERVO_INCREMENT = .01;
+    public static final double MAX_CAROUSEL_SPEED = 0.08;
+    public static final long CAROUSEL_SPINNER_REQUIRED_TIME = 2000; //2 seconds to spin carousel for delivery
 
-    public static final double MAX_CAROUSEL_SPEED = 0.1;
-    public static final long CAROUSEL_SPINNER_REQUIRED_TIME = 3000; //3 seconds to spin carousel for delivery
+    public static final int OUTPUT_SHOULDER_INCREMENT = 10;
+    public static final double OUT_SHOULDER_SPEED = 1.0;
 
-    public static final double MAX_OUT_SPEED = 1.0;
-    public static final double OUT_ALIGNER_SERVO_INCREMENT = .001;
-    public static final double OUT_ALIGNER_FOLDED_POSITION = 0;
-    public static final double OUT_ALIGNER_TOP_POSITION = 0.218;
-    public static final double OUT_ALIGNER_MIDDLE_POSITION = 0.386;
-    public static final double OUT_ALIGNER_BOTTOM_POSITION = 0.53;
-    public static final long OUTPUT_LEVEL_REQUIRED_TIME = 300; //300 milli-seconds to reach level
-    public static final int DELIVERY_ENCODER_VALUE = 527;
-    public static final int INTAKE_ENCODER_VALUE = 0;
+    public static final int OUTPUT_SHOULDER_INITIAL_POSITION = 0;
+    public static final int OUTPUT_SHOULDER_INTAKE_POSITION = 80;
+    public static final int OUTPUT_SHOULDER_TOP_POSITION = 550;
+    public static final int OUTPUT_SHOULDER_MIDDLE_POSITION = 420;
+    public static final int OUTPUT_SHOULDER_BOTTOM_POSITION = 250;
+    public static final int OUTPUT_SHOULDER_RELEASE_POSITION = 600;
+
+    public static final double OUTPUT_ELBOW_INCREMENT = .01;
+    public static final double OUTPUT_ELBOW_INITIAL_POSITION = .8;
+    public static final double OUTPUT_ELBOW_INTAKE_POSITION = .91;
+    public static final double OUTPUT_ELBOW_TOP_POSITION = 0;
+    public static final double OUTPUT_ELBOW_MIDDLE_POSITION = 0.07;
+    public static final double OUTPUT_ELBOW_BOTTOM_POSITION = 0.27;
+    public static final double OUTPUT_ELBOW_CAPPING_POSITION = 0.2;
+
+    public static final double OUTPUT_LID_CLOSED_POSITION = .26;
+    public static final double OUTPUT_LID_OPEN_POSITION = .6;
+    public static final double OUTPUT_LID_CAPPING_POSITION = 0;
+    public static final double OUTPUT_LID_INCREMENT = .01;
+
+    public static final long SERVO_REQUIRED_TIME = 300; //500 milli-seconds for servo to function
 }

@@ -21,30 +21,30 @@ public abstract class NearWarehouseAutonomous extends AutonomousHelper {
         switch (match.getBarcodeLevel()) {
             case 1:
             {
-                state.addSecondaryOperation(new OutputOperation(robot.getOutPutter(), OutputOperation.Type.Level_Low, "Level low"));
+                state.addSecondaryOperation(new OutputOperation(robot.getOutPutter(), robot.getIntake(), OutputOperation.Type.Level_Low, "Level low"));
                 break;
             }
             case 2:
             {
-                state.addSecondaryOperation(new OutputOperation(robot.getOutPutter(), OutputOperation.Type.Level_Middle, "Level middle"));
+                state.addSecondaryOperation(new OutputOperation(robot.getOutPutter(), robot.getIntake(), OutputOperation.Type.Level_Middle, "Level middle"));
                 break;
             }
             case 3:
             {
-                state.addSecondaryOperation(new OutputOperation(robot.getOutPutter(), OutputOperation.Type.Level_High, "Level high"));
+                state.addSecondaryOperation(new OutputOperation(robot.getOutPutter(), robot.getIntake(), OutputOperation.Type.Level_High, "Level high"));
                 break;
             }
         }
         //TODO - add appropriate forward movement required for the delivery level
-        state.addPrimaryOperation(new OutputOperation(robot.getOutPutter(), OutputOperation.Type.Deliver, "Place on hub"));
+        //state.addPrimaryOperation(new OutputOperation(robot.getOutPutter(), OutputOperation.Type.Deliver, "Place on hub"));
         states.add(state);
 
         //Create a state to get to the warehouse
         state = new State("NavigateToWarehouse");
-        state.addPrimaryOperation(new OutputOperation(robot.getOutPutter(), OutputOperation.Type.Fold, "Fold"));
         state.addPrimaryOperation(new FollowTrajectory(
                 Field.navigateTrajectory,
                 robot.getDriveTrain(),"Navigate"));
+        state.addSecondaryOperation(new OutputOperation(robot.getOutPutter(), robot.getIntake(), OutputOperation.Type.Level_Intake, "Intake position"));
         //Strafe left to push scoring element if alliance is red, strafe right otherwise
         if (match.getAlliance() == Alliance.Color.RED) {
             state.addPrimaryOperation(new StrafeLeftForDistanceOperation(

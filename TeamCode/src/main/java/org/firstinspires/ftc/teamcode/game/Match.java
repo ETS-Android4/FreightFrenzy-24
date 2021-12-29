@@ -105,7 +105,7 @@ public class Match {
 
         if (robot != null && field != null) {
             // Send telemetry message to signify robot context;
-            telemetry.addData("State:", status + ", bc:" + getBarcodeLevel());
+            telemetry.addData("State:", status + ", barCode: " + getBarcodeLevel());
             telemetry.addData("Position", robot.getPosition());
             telemetry.addData("Carousel", robot.getCarouselStatus());
             telemetry.addData("Input", robot.getIntakeStatus());

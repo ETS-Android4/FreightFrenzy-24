@@ -31,8 +31,7 @@ public class DriveTrain extends SampleMecanumDrive {
     public static final double P_DRIVE_COEFFICIENT = 0.025;     // Larger is more responsive, but also less stable
 
     public DriveTrain(HardwareMap hardwareMap, VslamCamera camera) {
-        super(hardwareMap);
-        super.setLocalizer(camera);
+        super(hardwareMap, camera);
     }
 
     /** Set power of left front motor

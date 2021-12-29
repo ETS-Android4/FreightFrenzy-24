@@ -5,82 +5,133 @@ import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.Servo;
 
 import org.firstinspires.ftc.teamcode.robot.RobotConfig;
+import org.firstinspires.ftc.teamcode.robot.operations.OutputOperation;
 
 import java.util.Locale;
 
 public class OutPutter {
     public static final int WITHIN_REACH = 5;
-    int initialPosition = 0;
     DcMotor shoulder;
     Servo elbow;
-    Servo gripper;
-
-    public int getInitialPosition() {
-        return initialPosition;
-    }
-
-    public void setInitialPosition() {
-        this.initialPosition = shoulder.getCurrentPosition();
-    }
+    Servo bucketLid;
+    int encoderOffset = 0;
 
     public OutPutter(HardwareMap hardwareMap) {
         shoulder = hardwareMap.get(DcMotor.class, RobotConfig.OUT_SHOULDER);
+        shoulder.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        shoulder.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         shoulder.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
         elbow = hardwareMap.get(Servo.class, RobotConfig.OUT_ELBOW);
-        gripper = hardwareMap.get(Servo.class, RobotConfig.OUT_GRIPPER);
+        bucketLid = hardwareMap.get(Servo.class, RobotConfig.BUCKET_LID);
 
-        fold();
+        assumeInitialPosition();
     }
 
-    public void setSpeed(double speed) {
-        this.shoulder.setPower(Math.max((Math.min(speed, RobotConfig.MAX_IN_SPEED)), -RobotConfig.MAX_IN_SPEED));
+    public void setShoulderPosition(int position) {
+        this.shoulder.setTargetPosition(position+ encoderOffset);
+        this.shoulder.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        this.shoulder.setPower(RobotConfig.OUT_SHOULDER_SPEED);
     }
-    public void setLowPosition() {
-        this.elbow.setPosition(RobotConfig.OUT_ALIGNER_BOTTOM_POSITION);
+
+    public void setElbowPosition(double position) {
+        this.elbow.setPosition(position);
     }
-    public void setMiddlePosition() {
-        this.elbow.setPosition(RobotConfig.OUT_ALIGNER_MIDDLE_POSITION);
+    /**
+     * Get the arm so it is in the initial position
+     */
+    public void assumeInitialPosition() {
+        this.close();
+        this.elbow.setPosition(RobotConfig.OUTPUT_ELBOW_INITIAL_POSITION);
+        this.shoulder.setTargetPosition(RobotConfig.OUTPUT_SHOULDER_INITIAL_POSITION);
+        this.shoulder.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        this.shoulder.setPower(RobotConfig.OUT_SHOULDER_SPEED);
     }
-    public void setHighPosition() {
-        this.elbow.setPosition(RobotConfig.OUT_ALIGNER_TOP_POSITION);
-    }
-    public void fold() {
-        this.elbow.setPosition(RobotConfig.OUT_ALIGNER_FOLDED_POSITION);
+
+    /**
+     * Get the arm so it is in a position to receive freight
+     */
+    public void assumeIntakePosition() {
+
+        this.open();
+        this.elbow.setPosition(RobotConfig.OUTPUT_ELBOW_INTAKE_POSITION);
+
+        this.shoulder.setTargetPosition(RobotConfig.OUTPUT_SHOULDER_INTAKE_POSITION);
+        this.shoulder.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        this.shoulder.setPower(RobotConfig.OUT_SHOULDER_SPEED);
+
     }
 
     public boolean withinReach() {
         return Math.abs(shoulder.getTargetPosition() - shoulder.getCurrentPosition()) < WITHIN_REACH;
     }
 
-    public void deliver() {
-        this.shoulder.setTargetPosition(RobotConfig.DELIVERY_ENCODER_VALUE + initialPosition);
-        this.shoulder.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        this.shoulder.setPower(.4);
+    public void raiseAtShoulder() {
+        this.setShoulderPosition(shoulder.getCurrentPosition() - encoderOffset + RobotConfig.OUTPUT_SHOULDER_INCREMENT);
+    }
+    public void lowerAtShoulder() {
+        this.setShoulderPosition(shoulder.getCurrentPosition() -encoderOffset - RobotConfig.OUTPUT_SHOULDER_INCREMENT);
     }
 
-    public void retract() {
-        this.shoulder.setTargetPosition(RobotConfig.INTAKE_ENCODER_VALUE + initialPosition);
-        this.shoulder.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        this.shoulder.setPower(.4);
+    public void retractForearm() {
+        this.elbow.setPosition(elbow.getPosition() - RobotConfig.OUTPUT_ELBOW_INCREMENT);
     }
-    public void raiseArm() {
-        this.elbow.setPosition(elbow.getPosition() - RobotConfig.OUT_ALIGNER_SERVO_INCREMENT);
+    public void extendForearm() {
+        this.elbow.setPosition(elbow.getPosition() + RobotConfig.OUTPUT_ELBOW_INCREMENT);
     }
 
-    public void lowerArm() {
-        this.elbow.setPosition(elbow.getPosition() + RobotConfig.OUT_ALIGNER_SERVO_INCREMENT);
+    public void open() {
+        this.bucketLid.setPosition(RobotConfig.OUTPUT_LID_OPEN_POSITION);
+    }
+    public void close() {
+        this.bucketLid.setPosition(RobotConfig.OUTPUT_LID_CLOSED_POSITION);
+    }
+    public void closeLidMore() {
+        this.bucketLid.setPosition(this.bucketLid.getPosition() + RobotConfig.OUTPUT_LID_INCREMENT);
+    }
+    public void openLidMore() {
+        this.bucketLid.setPosition(this.bucketLid.getPosition() - RobotConfig.OUTPUT_LID_INCREMENT);
     }
     public void stop() {
-        this.shoulder.setPower(0);
-        this.elbow.setPosition(RobotConfig.OUT_ALIGNER_FOLDED_POSITION);
     }
 
     public String getStatus() {
-        return String.format(Locale.getDefault(),"%d->%d@%.2f,Servo:%.3f",
+        return String.format(Locale.getDefault(),"Shoulder:%d->%d@%.2f(Offset:%d),Elbow:%.3f,Lid:%.3f",
                 this.shoulder.getCurrentPosition(),
                 this.shoulder.getTargetPosition(),
                 this.shoulder.getPower(),
-                this.elbow.getPosition());
+                this.encoderOffset,
+                this.elbow.getPosition(),
+                this.bucketLid.getPosition());
+    }
+
+    public void lidCappingPosition() {
+        this.bucketLid.setPosition(RobotConfig.OUTPUT_LID_CAPPING_POSITION);
+    }
+
+    /**
+     * To handle gear slippage, we allow for the driver to tell us where the current encoder value is
+     * pointing.
+     * @param type - the level at which the driver says we are right now
+     */
+    public void setEncoderOffset(OutputOperation.Type type) {
+        switch (type) {
+            case Level_Intake: {
+                this.encoderOffset = this.shoulder.getCurrentPosition() - RobotConfig.OUTPUT_SHOULDER_INTAKE_POSITION;
+                break;
+            }
+            case Level_Low: {
+                this.encoderOffset = this.shoulder.getCurrentPosition() - RobotConfig.OUTPUT_SHOULDER_BOTTOM_POSITION;
+                break;
+            }
+            case Level_Middle: {
+                this.encoderOffset = this.shoulder.getCurrentPosition() - RobotConfig.OUTPUT_SHOULDER_MIDDLE_POSITION;
+                break;
+            }
+            case Level_High: {
+                this.encoderOffset = this.shoulder.getCurrentPosition() - RobotConfig.OUTPUT_SHOULDER_TOP_POSITION;
+                break;
+            }
+        }
     }
 }

@@ -11,7 +11,7 @@ import com.spartronics4915.lib.T265Camera;
 
 import org.firstinspires.ftc.teamcode.game.Field;
 import org.firstinspires.ftc.teamcode.game.Match;
-import org.firstinspires.ftc.teamcode.roadrunner.drive.DriveConstants;
+import org.firstinspires.ftc.teamcode.robot.RobotConfig;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Locale;
@@ -35,11 +35,10 @@ import java.util.function.Consumer;
 public class VslamCamera implements Localizer, Consumer<T265Camera.CameraUpdate> {
     //Remember all measurements for ftc-lib geometry are in meters
 
-    //Our camera sticks out about 2 inches beyond the center of the front wheels
     public static final double CENTER_OFFSET_X =
-            -(DriveConstants.TRACK_LENGTH/2 + 2*Field.MM_PER_INCH) / 1000;
+            -RobotConfig.ROBOT_CENTER_FROM_FRONT/1000; //in meters
     //How far left of the camera the center is
-    public static final double CENTER_OFFSET_Y = 0;//3*Field.M_PER_INCH;
+    public static final double CENTER_OFFSET_Y = 0;
     public static final double T265_ROTATION = 0;
     public static final Transform2d robotCenterOffsetFromCamera =
             new Transform2d(new Translation2d(CENTER_OFFSET_X, CENTER_OFFSET_Y),
@@ -60,11 +59,15 @@ public class VslamCamera implements Localizer, Consumer<T265Camera.CameraUpdate>
      * @param hardwareMap - hardware map
      */
     public VslamCamera(HardwareMap hardwareMap) {
+        isInitialized = false;
         Thread cameraInitializationThread = new Thread(() -> {
             synchronized (synchronizationObject) {
                 if (t265Camera == null) {
                     Match.log("Creating new T265 camera");
                     t265Camera = new T265Camera(robotCenterOffsetFromCamera, 1.0, hardwareMap.appContext);
+                }
+                else {
+                    Match.log("Using already defined T265 camera");
                 }
                 start();
                 isInitialized = true;
@@ -78,25 +81,10 @@ public class VslamCamera implements Localizer, Consumer<T265Camera.CameraUpdate>
      * Set the current position of the robot. We ask the t265 camera to set the pose
      * @param pose the pose to set
      */
-    public synchronized boolean setCurrentPose(Pose2d pose) {
+    public synchronized void setCurrentPose(Pose2d pose) {
         synchronized (synchronizationObject) {
-            if (lastCameraUpdate == null) {
-                Match.log("Unable to set pose as no update has been received from camera");
-                return false;
-            }
-            else if (lastCameraUpdate.confidence == T265Camera.PoseConfidence.Low){
-                Match.log("Unable to set pose as confidence level is "
-                        + lastCameraUpdate.confidence.toString());
-                return false;
-            }
-            else {
-                t265Camera.setPose(Field.roadRunnerToCameraPose(pose));
-                //currentPose = pose;
-                Match.log(
-                        "Set pose to " + pose
-                                + ", while confidence was: " + lastCameraUpdate.confidence.toString());
-                return true;
-            }
+            lastCameraUpdate = null;
+            t265Camera.setPose(Field.roadRunnerToCameraPose(pose));
         }
     }
 
@@ -148,6 +136,7 @@ public class VslamCamera implements Localizer, Consumer<T265Camera.CameraUpdate>
         else {
             Match.log("T265 Camera was already stopped");
         }
+        lastCameraUpdate = null;
     }
 
     /**
@@ -157,16 +146,18 @@ public class VslamCamera implements Localizer, Consumer<T265Camera.CameraUpdate>
     public void start() {
         synchronized (synchronizationObject) {
             try {//start our camera
-                if (!t265Camera.isStarted()) {
-                    Match.log("Starting T265 camera");
+                if (!isInitialized) {
+                    if (t265Camera.isStarted()) {
+                        t265Camera.stop();
+                        Match.log("Stopped T265 camera");
+                    }
                     t265Camera.start(this);
-                } else {
-                    Match.log("T265 Camera was already running");
+                    Match.log("Started T265 camera");
+                    lastCameraUpdate = null;
                 }
             }
             catch(Throwable e){
                 RobotLog.logStackTrace("SilverTitans: Error starting real sense", e);
-                throw e;
             }
         }
     }
@@ -174,8 +165,7 @@ public class VslamCamera implements Localizer, Consumer<T265Camera.CameraUpdate>
 
     /**
      * Accept the asynchronous update sent by the camera.
-     * We calculate our current pose by adding the poseTranslation to the camera provided
-     * pose. Our current pose is kept in inches and radians. We also maintain our pose velocity
+     * Our current pose is kept in inches and radians. We also maintain our pose velocity
      * by converting the velocity provided to inches/second.
      * @param cameraUpdate - the camera update provided by the camera
      */
@@ -187,12 +177,12 @@ public class VslamCamera implements Localizer, Consumer<T265Camera.CameraUpdate>
                 lastCameraUpdate = cameraUpdate;
                 //only update our position if the confidence level is not low
                 if (cameraUpdate.confidence != T265Camera.PoseConfidence.Low) {
-                pose2dVelocity = new Pose2d(
-                        cameraUpdate.velocity.vxMetersPerSecond / Field.M_PER_INCH,
-                        cameraUpdate.velocity.vyMetersPerSecond / Field.M_PER_INCH,
-                        cameraUpdate.velocity.omegaRadiansPerSecond);
-                //set last pose to be the current one
-                currentPose = Field.cameraToRoadRunnerPose(cameraUpdate.pose);
+                    pose2dVelocity = new Pose2d(
+                            cameraUpdate.velocity.vxMetersPerSecond / Field.M_PER_INCH,
+                            cameraUpdate.velocity.vyMetersPerSecond / Field.M_PER_INCH,
+                            cameraUpdate.velocity.omegaRadiansPerSecond);
+                    //set last pose to be the current one
+                    currentPose = Field.cameraToRoadRunnerPose(cameraUpdate.pose);
                 }
                 else {
                     Match.log("Did not accept camera update because the confidence was "

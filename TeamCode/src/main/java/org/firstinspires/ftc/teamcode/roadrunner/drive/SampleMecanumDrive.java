@@ -28,6 +28,7 @@ import org.firstinspires.ftc.teamcode.roadrunner.trajectorysequence.TrajectorySe
 import org.firstinspires.ftc.teamcode.roadrunner.trajectorysequence.TrajectorySequenceBuilder;
 import org.firstinspires.ftc.teamcode.roadrunner.trajectorysequence.TrajectorySequenceRunner;
 import org.firstinspires.ftc.teamcode.roadrunner.util.LynxModuleUtil;
+import org.firstinspires.ftc.teamcode.robot.RobotConfig;
 import org.firstinspires.ftc.teamcode.robot.components.vision.VslamCamera;
 
 import java.util.ArrayList;
@@ -66,6 +67,7 @@ public class SampleMecanumDrive extends MecanumDrive {
 
     private static final TrajectoryVelocityConstraint VEL_CONSTRAINT = getVelocityConstraint(MAX_VEL, MAX_ANG_VEL, TRACK_WIDTH);
     private static final TrajectoryAccelerationConstraint ACCEL_CONSTRAINT = getAccelerationConstraint(MAX_ACCEL);
+    private static final TrajectoryVelocityConstraint ACCURATE_VEL_CONSTRAINT = getVelocityConstraint(MAX_VEL/3, MAX_ANG_VEL/3, TRACK_WIDTH);
 
     private TrajectoryFollower follower;
 
@@ -74,11 +76,11 @@ public class SampleMecanumDrive extends MecanumDrive {
 
     private VoltageSensor batteryVoltageSensor;
 
-    public SampleMecanumDrive(HardwareMap hardwareMap) {
+    public SampleMecanumDrive(HardwareMap hardwareMap, VslamCamera camera) {
         super(kV, kA, kStatic, TRACK_WIDTH, TRACK_WIDTH, LATERAL_MULTIPLIER);
 
         follower = new HolonomicPIDVAFollower(TRANSLATIONAL_PID, TRANSLATIONAL_PID, HEADING_PID,
-                new Pose2d(0.1, 0.1, Math.toRadians(1.0)), 2.0);
+                new Pose2d(0.1, 0.1, Math.toRadians(1.0)), .5);
 
         LynxModuleUtil.ensureMinimumFirmwareVersion(hardwareMap);
 
@@ -88,10 +90,10 @@ public class SampleMecanumDrive extends MecanumDrive {
             module.setBulkCachingMode(LynxModule.BulkCachingMode.AUTO);
         }
 
-        leftFront = hardwareMap.get(DcMotorEx.class, "leftFrontDrive");
-        leftRear = hardwareMap.get(DcMotorEx.class, "leftRearDrive");
-        rightRear = hardwareMap.get(DcMotorEx.class, "rightRearDrive");
-        rightFront = hardwareMap.get(DcMotorEx.class, "rightFrontDrive");
+        leftFront = hardwareMap.get(DcMotorEx.class, RobotConfig.LEFT_FRONT_DRIVE);
+        leftRear = hardwareMap.get(DcMotorEx.class, RobotConfig.LEFT_REAR_DRIVE);
+        rightRear = hardwareMap.get(DcMotorEx.class, RobotConfig.RIGHT_REAR_DRIVE);
+        rightFront = hardwareMap.get(DcMotorEx.class, RobotConfig.RIGHT_FRONT_DRIVE);
 
         motors = Arrays.asList(leftFront, leftRear, rightRear, rightFront);
 
@@ -115,9 +117,7 @@ public class SampleMecanumDrive extends MecanumDrive {
 
         // TODO: if desired, use setLocalizer() to change the localization method
         // for instance, setLocalizer(new ThreeTrackingWheelLocalizer(...));
-        VslamCamera vslamCamera = new VslamCamera(hardwareMap);
-        vslamCamera.setCurrentPose(new Pose2d());
-        this.setLocalizer(vslamCamera);
+        this.setLocalizer(camera);
 
         trajectorySequenceRunner = new TrajectorySequenceRunner(follower, HEADING_PID);
     }
@@ -126,12 +126,24 @@ public class SampleMecanumDrive extends MecanumDrive {
         return new TrajectoryBuilder(startPose, VEL_CONSTRAINT, ACCEL_CONSTRAINT);
     }
 
+    public static TrajectoryBuilder accurateTrajectoryBuilder(Pose2d startPose) {
+        return new TrajectoryBuilder(startPose, ACCURATE_VEL_CONSTRAINT, ACCEL_CONSTRAINT);
+    }
+
     public static TrajectoryBuilder trajectoryBuilder(Pose2d startPose, boolean reversed) {
         return new TrajectoryBuilder(startPose, reversed, VEL_CONSTRAINT, ACCEL_CONSTRAINT);
     }
 
+    public static TrajectoryBuilder accurateTrajectoryBuilder(Pose2d startPose, boolean reversed) {
+        return new TrajectoryBuilder(startPose, reversed, ACCURATE_VEL_CONSTRAINT, ACCEL_CONSTRAINT);
+    }
+
     public static TrajectoryBuilder trajectoryBuilder(Pose2d startPose, double startHeading) {
         return new TrajectoryBuilder(startPose, startHeading, VEL_CONSTRAINT, ACCEL_CONSTRAINT);
+    }
+
+    public static TrajectoryBuilder accurateTrajectoryBuilder(Pose2d startPose, double startHeading) {
+        return new TrajectoryBuilder(startPose, startHeading, ACCURATE_VEL_CONSTRAINT, ACCEL_CONSTRAINT);
     }
 
     public static TrajectorySequenceBuilder trajectorySequenceBuilder(Pose2d startPose) {
@@ -306,7 +318,7 @@ public class SampleMecanumDrive extends MecanumDrive {
     }
 
     public void ensureWheelDirection() {
-        rightFront.setDirection(DcMotorSimple.Direction.REVERSE);
-        rightRear.setDirection(DcMotorSimple.Direction.REVERSE);
+        leftFront.setDirection(DcMotorSimple.Direction.REVERSE);
+        leftRear.setDirection(DcMotorSimple.Direction.REVERSE);
     }
 }
