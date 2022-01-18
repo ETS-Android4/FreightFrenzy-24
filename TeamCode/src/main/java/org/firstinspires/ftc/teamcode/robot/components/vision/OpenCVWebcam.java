@@ -265,16 +265,17 @@ public class OpenCVWebcam {
                     return 2;
                 }
             }
+            return 3;
         } else {
             if (seeingObject()) {
-                if (getMinY() < 800) {
+                if (getMinY() > 1400) {
                     return 1;
-                } else if (getMinY() < 1400) {
+                } else if (getMinY() > 1000) {
                     return 2;
                 }
             }
+            return 3;
         }
-        return 3;
     }
 
     public class Pipeline extends OpenCvPipeline {
@@ -291,7 +292,7 @@ public class OpenCVWebcam {
         final Scalar BLUE = new Scalar(0, 0, 255);
         final Scalar SILVER = new Scalar(192, 192, 192);
 
-        public ContourDetector contourDetector = new ContourDetector(colorMin, colorMax,
+        ContourDetector contourDetector = new ContourDetector(colorMin, colorMax,
                 530, 1080, 0, 1920);
 
         @Override

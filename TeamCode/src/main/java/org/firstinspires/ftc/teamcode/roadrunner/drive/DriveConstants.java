@@ -33,7 +33,7 @@ public class DriveConstants {
      * If using the built-in motor velocity PID, update MOTOR_VELO_PID with the tuned coefficients
      * from DriveVelocityPIDTuner.
      */
-    public static final boolean RUN_USING_ENCODER = false;
+    public static final boolean RUN_USING_ENCODER = true;
     public static PIDFCoefficients MOTOR_VELO_PID = new PIDFCoefficients(0, 0, 0,
             getMotorVelocityF(MAX_RPM / 60 * TICKS_PER_REV));
 
@@ -46,7 +46,7 @@ public class DriveConstants {
      * convenience. Make sure to exclude any gear ratio included in MOTOR_CONFIG from GEAR_RATIO.
      */
     public static double WHEEL_RADIUS = 70.0/2/Field.MM_PER_INCH; // Rev mecanum: 70 mm diameter
-    public static double GEAR_RATIO = 26.0/15; // output (wheel) speed / input (motor) speed
+    public static double GEAR_RATIO = 26.0/15.0; // output (wheel) speed / input (motor) speed
     public static double TRACK_WIDTH = 9.625; // in
     public static double TRACK_LENGTH = 10.25; // in
 
@@ -67,10 +67,10 @@ public class DriveConstants {
      * small and gradually increase them later after everything is working. All distance units are
      * inches.
      */
-    public static double MAX_VEL = 120;
-    public static double MAX_ACCEL = 120;
-    public static double MAX_ANG_VEL = Math.toRadians(90);
-    public static double MAX_ANG_ACCEL = Math.toRadians(90);
+    public static double MAX_VEL = 180;
+    public static double MAX_ACCEL = 180;
+    public static double MAX_ANG_VEL = Math.toRadians(120);
+    public static double MAX_ANG_ACCEL = Math.toRadians(120);
 
 
     public static double encoderTicksToInches(double ticks) {

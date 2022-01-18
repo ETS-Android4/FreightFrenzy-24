@@ -6,7 +6,7 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import org.firstinspires.ftc.teamcode.game.Field;
 import org.firstinspires.ftc.teamcode.game.Match;
 import org.firstinspires.ftc.teamcode.robot.Robot;
-import org.firstinspires.ftc.teamcode.robot.operations.DistanceOperation;
+import org.firstinspires.ftc.teamcode.robot.operations.DriveForDistanceOperation;
 import org.firstinspires.ftc.teamcode.robot.operations.Operation;
 import org.firstinspires.ftc.teamcode.robot.operations.StrafeLeftForDistanceOperation;
 import org.firstinspires.ftc.teamcode.robot.operations.WaitOperation;
@@ -50,15 +50,15 @@ public class FillAndGo extends LinearOpMode {
                     double movementToApply = MOVEMENT_INCREMENT * multiplier;
 
                     if (gamepad1.dpad_up) {
-                        operations.add(new DistanceOperation(movementToApply, SPEED, robot.getDriveTrain(), "Move forward"));
+                        operations.add(new DriveForDistanceOperation(movementToApply, SPEED, robot.getDriveTrain(), "Move forward"));
                         if (gamepad1.right_trigger > 0) {
-                            robot.queuePrimaryOperation(new DistanceOperation(movementToApply, SPEED, robot.getDriveTrain(), "Move forward"));
+                            robot.queuePrimaryOperation(new DriveForDistanceOperation(movementToApply, SPEED, robot.getDriveTrain(), "Move forward"));
                         }
                         lastRecorded = new Date();
                     } else if (gamepad1.dpad_down) {
-                        operations.add(new DistanceOperation(-movementToApply, SPEED, robot.getDriveTrain(), "Move backward"));
+                        operations.add(new DriveForDistanceOperation(-movementToApply, SPEED, robot.getDriveTrain(), "Move backward"));
                         if (gamepad1.right_trigger > 0) {
-                            robot.queuePrimaryOperation(new DistanceOperation(-movementToApply, SPEED, robot.getDriveTrain(), "Move backward"));
+                            robot.queuePrimaryOperation(new DriveForDistanceOperation(-movementToApply, SPEED, robot.getDriveTrain(), "Move backward"));
                         }
                         lastRecorded = new Date();
                     } else if (gamepad1.dpad_left) {

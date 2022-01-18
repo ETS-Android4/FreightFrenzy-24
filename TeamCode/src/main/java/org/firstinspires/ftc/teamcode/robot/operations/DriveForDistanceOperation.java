@@ -9,12 +9,12 @@ import java.util.Locale;
  * Created by Silver Titans on 10/12/17.
  */
 
-public class DistanceOperation extends Operation {
-    private double distance;
-    private double speed;
-    DriveTrain driveTrain;
+public class DriveForDistanceOperation extends Operation {
+    protected double distance;
+    protected double speed;
+    protected DriveTrain driveTrain;
 
-    public DistanceOperation(double distance, double speed, DriveTrain driveTrain, String title) {
+    public DriveForDistanceOperation(double distance, double speed, DriveTrain driveTrain, String title) {
         this.distance = distance;
         this.speed = speed;
         this.driveTrain = driveTrain;
@@ -39,6 +39,9 @@ public class DistanceOperation extends Operation {
         return this.speed;
     }
 
+    public void setDistance(double distance) {
+        this.distance = distance;
+    }
     public double getDistance() {
         return this.distance;
     }

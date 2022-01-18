@@ -35,15 +35,12 @@ import org.firstinspires.ftc.teamcode.robot.operations.OutputOperation;
  *         a - lowest arm level
  *         b - middle arm level
  *         y - top arm level
- *         Dpad Up - raise output arm
- *         Dpad Down - lower output arm
- *         Dpad Left -
- *              if right trigger is pressed: lower intake platform
- *              other wise - start intake
+ *         Dpad Up - raise intake platform
+ *         Dpad Down - lower intake platform
+ *         Dpad Left - start intake
  *         Dpad right -
  *              if left trigger is pressed: expel
- *              if right trigger is pressed: raise intake platform
- *              otherwise - stop intake and consume freight
+ *              otherwise - consume freight
  *
  *  GamePad2:
  *         Left stick - y axis - carousel speed
@@ -127,8 +124,8 @@ public class Robot {
         initCameras();
         initDriveTrain();
         this.carouselSpinner = new CarouselSpinner(hardwareMap);
-        this.intake = new Intake(hardwareMap);
         this.outputter = new OutPutter(hardwareMap);
+        this.intake = new Intake(hardwareMap, outputter);
         this.led = new LED(hardwareMap);
 
         this.led.setPattern(RevBlinkinLedDriver.BlinkinPattern.WHITE);
@@ -284,26 +281,21 @@ public class Robot {
     public void handleInput(Gamepad gamePad1, Gamepad gamePad2) {
         //this.intake.setSpeed(gamePad2.left_stick_x);
         if (gamePad1.dpad_left) {
-            if (gamePad1.right_trigger > .1) {
-                intake.lowerIntake();
-            }
-            else {
-                intake.setForIntake();
-                //ensure we only get one freight in
-                intake.setInterruption(true);
-                intake.setSpeed(-1.0);
-            }
+            intake.setForIntake();
         }
         else if (gamePad1.dpad_right) {
             if (gamePad1.left_trigger > .1) {
                 queueTertiaryOperation(new IntakeOperation(intake, IntakeOperation.Type.Expel, "Expel"));
             }
-            else if (gamePad1.right_trigger > .1) {
-                intake.raiseIntake();
-            }
             else {
                 queueTertiaryOperation(new IntakeOperation(intake, IntakeOperation.Type.Consume, "Consume"));
             }
+        }
+        else if (gamePad1.dpad_up) {
+            intake.raiseIntake();
+        }
+        else if (gamePad1.dpad_down) {
+            intake.lowerIntake();
         }
     }
 
@@ -314,7 +306,10 @@ public class Robot {
         if gamepad2 left bumper is pressed, the levels are not set, the outputter is told that the new
         position for the specified level should be reset
          */
-            if (gamePad1.a || gamePad2.a) {
+            if (gamePad1.a) {
+                queueSecondaryOperation(new OutputOperation(outputter, intake, OutputOperation.Type.Level_Pickup, "Pickup level"));
+            }
+            if (gamePad2.a) {
                 if (gamePad2.left_bumper) {
                     outputter.setEncoderOffset(OutputOperation.Type.Level_Low);
                 }
@@ -330,7 +325,10 @@ public class Robot {
                     queueSecondaryOperation(new OutputOperation(outputter, intake, OutputOperation.Type.Level_Middle, "Middle level"));
                 }
             }
-            if (gamePad1.y || gamePad2.y) {
+            if (gamePad1.y) {
+                queueSecondaryOperation(new OutputOperation(outputter, intake, OutputOperation.Type.Level_Llama, "Llama level"));
+            }
+            if (gamePad2.y) {
                 if (gamePad2.left_bumper) {
                     outputter.setEncoderOffset(OutputOperation.Type.Level_High);
                 }
@@ -401,9 +399,10 @@ public class Robot {
     public void reset() {
         if (this.driveTrain != null) {
             this.driveTrain.ensureWheelDirection();
+            this.driveTrain.reset();
         }
         startVSLAM();
-        this.webcam.start();
+        //this.webcam.start();
     }
 
     public Pose2d getPose() {

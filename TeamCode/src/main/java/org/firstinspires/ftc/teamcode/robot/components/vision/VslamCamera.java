@@ -121,6 +121,7 @@ public class VslamCamera implements Localizer, Consumer<T265Camera.CameraUpdate>
      */
     @Override
     public void setPoseEstimate(@NotNull Pose2d pose2d) {
+        //setCurrentPose(pose2d);
     }
 
     @Override

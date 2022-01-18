@@ -27,35 +27,40 @@ public class RobotConfig {
     public static final double ROBOT_LENGTH = ROBOT_CENTER_FROM_BACK + ROBOT_CENTER_FROM_FRONT;
     public static final double ALLOWED_BEARING_ERROR = 0.5;
     public static final double ALLOWED_POSITIONAL_ERROR = .25;
-    public static final double SUPER_CAUTIOUS_SPEED = 0.2;
-    public static final double REGULAR_SPEED = 0.6;
+    public static final double SUPER_CAUTIOUS_SPEED = 0.4;
+    public static final double REGULAR_SPEED = .6;
 
-    public static final double INTAKE_SPEED = 1.0;
+    public static final double INTAKE_SPEED = -1.0;
     public static final double INTAKE_SERVO_INCREMENT = .001;
     public static final double INTAKE_LOWERED_POSITION = .635;
-    public static final double INTAKE_RAISED_POSITION = .35;
-    public static final double INTAKE_EXPEL_POSITION = .5;
+    public static final double INTAKE_RAISED_POSITION = .32;
+    public static final double INTAKE_CONSUME_POSITION = .5;
     public static final double MAX_IN_SPEED = 1.0;
 
     public static final double MAX_CAROUSEL_SPEED = 0.08;
     public static final long CAROUSEL_SPINNER_REQUIRED_TIME = 2000; //2 seconds to spin carousel for delivery
 
-    public static final int OUTPUT_SHOULDER_INCREMENT = 10;
+    public static final int OUTPUT_SHOULDER_INCREMENT = 15;
     public static final double OUT_SHOULDER_SPEED = 1.0;
 
     public static final int OUTPUT_SHOULDER_INITIAL_POSITION = 0;
-    public static final int OUTPUT_SHOULDER_INTAKE_POSITION = 80;
+    public static final int OUTPUT_SHOULDER_INTAKE_POSITION = 30;
     public static final int OUTPUT_SHOULDER_TOP_POSITION = 550;
     public static final int OUTPUT_SHOULDER_MIDDLE_POSITION = 420;
     public static final int OUTPUT_SHOULDER_BOTTOM_POSITION = 250;
-    public static final int OUTPUT_SHOULDER_RELEASE_POSITION = 600;
+    public static final int OUTPUT_SHOULDER_LLAMA_POSITION = 753;
+    public static final int OUTPUT_SHOULDER_VERTICAL_POSITION = 753;
+    public static final int OUTPUT_SHOULDER_PICKUP_POSITION = 300;
 
     public static final double OUTPUT_ELBOW_INCREMENT = .01;
     public static final double OUTPUT_ELBOW_INITIAL_POSITION = .8;
-    public static final double OUTPUT_ELBOW_INTAKE_POSITION = .91;
+    public static final double OUTPUT_ELBOW_INTAKE_POSITION = .92;
     public static final double OUTPUT_ELBOW_TOP_POSITION = 0;
     public static final double OUTPUT_ELBOW_MIDDLE_POSITION = 0.07;
     public static final double OUTPUT_ELBOW_BOTTOM_POSITION = 0.27;
+    public static final double OUTPUT_ELBOW_LLAMA_POSITION = 1;
+    public static final double OUTPUT_ELBOW_PICKUP_POSITION = .01;
+    public static final double OUTPUT_ELBOW_VERTICAL_POSITION = .589;
     public static final double OUTPUT_ELBOW_CAPPING_POSITION = 0.2;
 
     public static final double OUTPUT_LID_CLOSED_POSITION = .26;
@@ -63,5 +68,5 @@ public class RobotConfig {
     public static final double OUTPUT_LID_CAPPING_POSITION = 0;
     public static final double OUTPUT_LID_INCREMENT = .01;
 
-    public static final long SERVO_REQUIRED_TIME = 300; //500 milli-seconds for servo to function
+    public static final long SERVO_REQUIRED_TIME = 200; //200 milli-seconds for servo to function
 }

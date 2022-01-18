@@ -6,7 +6,6 @@ import com.acmerobotics.dashboard.telemetry.MultipleTelemetry;
 import com.acmerobotics.roadrunner.geometry.Pose2d;
 import com.acmerobotics.roadrunner.util.NanoClock;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
-import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.util.RobotLog;
 
@@ -14,6 +13,7 @@ import org.firstinspires.ftc.robotcore.internal.system.Misc;
 import org.firstinspires.ftc.teamcode.roadrunner.drive.SampleMecanumDrive;
 import org.firstinspires.ftc.teamcode.roadrunner.util.LoggingUtil;
 import org.firstinspires.ftc.teamcode.roadrunner.util.RegressionUtil;
+import org.firstinspires.ftc.teamcode.robot.components.vision.VslamCamera;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -34,7 +34,7 @@ import static org.firstinspires.ftc.teamcode.roadrunner.drive.DriveConstants.rpm
  */
 @Config
 @Autonomous(group = "drive")
-@Disabled
+//@Disabled
 public class AutomaticFeedforwardTuner extends LinearOpMode {
     public static double MAX_POWER = 0.7;
     public static double DISTANCE = 100; // in
@@ -48,7 +48,7 @@ public class AutomaticFeedforwardTuner extends LinearOpMode {
 
         telemetry = new MultipleTelemetry(telemetry, FtcDashboard.getInstance().getTelemetry());
 
-        SampleMecanumDrive drive = new SampleMecanumDrive(hardwareMap);
+        SampleMecanumDrive drive = new SampleMecanumDrive(hardwareMap, new VslamCamera(hardwareMap));
 
         NanoClock clock = NanoClock.system();
 

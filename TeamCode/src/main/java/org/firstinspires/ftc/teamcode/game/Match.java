@@ -4,6 +4,7 @@ import com.acmerobotics.dashboard.FtcDashboard;
 import com.acmerobotics.dashboard.canvas.Canvas;
 import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
 import com.acmerobotics.roadrunner.geometry.Pose2d;
+import com.qualcomm.hardware.rev.RevBlinkinLedDriver;
 import com.qualcomm.robotcore.util.RobotLog;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
@@ -11,6 +12,7 @@ import org.firstinspires.ftc.teamcode.robot.Robot;
 import org.firstinspires.ftc.teamcode.robot.RobotConfig;
 
 import java.util.Date;
+import java.util.Locale;
 
 /**
  * Created by Silver Titans on 9/19/17. This is Cameron's comment
@@ -34,6 +36,7 @@ public class Match {
 
     private Field.StartingPosition startingPosition;
     private String trajectoryError = "";
+    private double distanceTraveledForFreight;
 
     synchronized public static Match getNewInstance() {
         match = new Match();
@@ -210,5 +213,18 @@ public class Match {
 
     public void setBarcodeLevel(int barcodeLevel) {
         this.barcodeLevel = barcodeLevel;
+    }
+
+    public void setLed(RevBlinkinLedDriver.BlinkinPattern pattern) {
+        this.robot.setPattern(pattern);
+    }
+
+    public double getDistanceTraveledForFreight() {
+        return distanceTraveledForFreight;
+    }
+
+    public void setDistanceTraveledForFreight(double distanceTraveledForFreight) {
+        log(String.format(Locale.getDefault(), "Setting distance traveled for freight = %.2f(%.2f\")", distanceTraveledForFreight, distanceTraveledForFreight/Field.MM_PER_INCH));
+        this.distanceTraveledForFreight = distanceTraveledForFreight;
     }
 }

@@ -16,14 +16,17 @@ public class OutputOperation extends Operation {
     OutPutter outputter;
     Intake intake;
     Type type;
+    Date elbowPositionSetTime;
 
     public enum Type {
         Level_Initial,
-        Level_Initial_Release,
         Level_Intake,
         Level_Low,
         Level_Middle,
         Level_High,
+        Level_Llama,
+        Level_Pickup,
+        Vertical,
         Open,
         Close
     }
@@ -43,25 +46,29 @@ public class OutputOperation extends Operation {
 
     public boolean isComplete() {
         long currentTime = new Date().getTime();
-        switch (type) {
-            case Open:
-            case Close:
-                //for open/close operations: just wait servo turn time to say operation is complete
-                return currentTime - getStartTime().getTime() > RobotConfig.SERVO_REQUIRED_TIME;
-            case Level_Initial:
-            case Level_Initial_Release:
-            case Level_Intake:
-            case Level_Low:
-            case Level_Middle:
-            case Level_High: {
-                if (outputter.withinReach()) {
-                    //get ready to intake if the position specified is for intake
-                    if (type == Type.Level_Intake) {
-                        outputter.open();
-                    }
-                    return true;
-                }
+        if (type == Type.Open || type == Type.Close) {
+            //for open/close operations: just wait servo turn time to say operation is complete
+            return currentTime - getStartTime().getTime() > RobotConfig.SERVO_REQUIRED_TIME;
+        }
+        //for operations requiring shoulder and elbow movement
+        if (outputter.withinReach()) {
+            if (elbowPositionSetTime == null) {
+                setElbowPosition();
+                elbowPositionSetTime = new Date();
             }
+            if (currentTime - elbowPositionSetTime.getTime() > RobotConfig.SERVO_REQUIRED_TIME) {
+                if (type == Type.Level_Intake) {
+                    outputter.open();
+                    outputter.setInIntakePosition(true);
+                }
+                else if (type == Type.Level_Pickup) {
+                    outputter.open();
+                }
+                return true;
+            }
+        }
+        else {
+            return false;
         }
         return false;
     }
@@ -80,13 +87,24 @@ public class OutputOperation extends Operation {
                 outputter.setShoulderPosition(RobotConfig.OUTPUT_SHOULDER_INTAKE_POSITION);
                 break;
             }
-            case Level_Initial_Release:
             case Level_Low: {
                 outputter.setShoulderPosition(RobotConfig.OUTPUT_SHOULDER_BOTTOM_POSITION);
                 break;
             }
             case Level_Middle: {
                 outputter.setShoulderPosition(RobotConfig.OUTPUT_SHOULDER_MIDDLE_POSITION);
+                break;
+            }
+            case Level_Llama: {
+                outputter.setShoulderPosition(RobotConfig.OUTPUT_SHOULDER_LLAMA_POSITION);
+                break;
+            }
+            case Level_Pickup: {
+                outputter.setShoulderPosition(RobotConfig.OUTPUT_SHOULDER_PICKUP_POSITION);
+                break;
+            }
+            case Vertical: {
+                outputter.setShoulderPosition(RobotConfig.OUTPUT_SHOULDER_VERTICAL_POSITION);
                 break;
             }
             default : {
@@ -117,22 +135,16 @@ public class OutputOperation extends Operation {
                 outputter.setElbowPosition(RobotConfig.OUTPUT_ELBOW_TOP_POSITION);
                 break;
             }
-            case Level_Initial_Release: {/*
-                //for initial release we set position based on bar code level
-                switch (Match.getInstance().getBarcodeLevel()) {
-                    case 1: {
-                        outputter.setElbowPosition(RobotConfig.OUTPUT_ELBOW_BOTTOM_POSITION);
-                        break;
-                    }
-                    case 2: {
-                        outputter.setElbowPosition(RobotConfig.OUTPUT_ELBOW_MIDDLE_POSITION);
-                        break;
-                    }
-                    case 3: {
-                        outputter.setElbowPosition(RobotConfig.OUTPUT_ELBOW_TOP_POSITION);
-                        break;
-                    }
-                }*/
+            case Level_Llama: {
+                outputter.setElbowPosition(RobotConfig.OUTPUT_ELBOW_LLAMA_POSITION);
+                break;
+            }
+            case Level_Pickup: {
+                outputter.setElbowPosition(RobotConfig.OUTPUT_ELBOW_PICKUP_POSITION);
+                break;
+            }
+            case Vertical: {
+                outputter.setElbowPosition(RobotConfig.OUTPUT_ELBOW_VERTICAL_POSITION);
                 break;
             }
         }
@@ -141,20 +153,22 @@ public class OutputOperation extends Operation {
 
     @Override
     public void startOperation() {
+        outputter.setInIntakePosition(false);
         switch (type) {
-            case Level_Initial_Release:
+            case Vertical:
+            case Level_Pickup:
+            case Level_Llama:
             case Level_Low:
             case Level_Middle:
             case Level_High:
             case Level_Initial:
             case Level_Intake: {
-                //for all bucket positions, we start by closing and folding bucket first
+                //for all bucket positions, we start by closing bucket first
                 outputter.close();
+                //then getting elbow to the release position first
+                outputter.setElbowPosition(RobotConfig.OUTPUT_ELBOW_INITIAL_POSITION);
+                //set the desired shoulder positions
                 setShoulderPosition();
-                setElbowPosition();
-                if (type == Type.Level_Intake) {
-                    intake.setForIntake();
-                }
                 break;
             }
             case Open: {

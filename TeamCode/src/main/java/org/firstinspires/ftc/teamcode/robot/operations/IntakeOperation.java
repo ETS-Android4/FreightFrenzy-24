@@ -1,5 +1,6 @@
 package org.firstinspires.ftc.teamcode.robot.operations;
 
+import org.firstinspires.ftc.teamcode.robot.RobotConfig;
 import org.firstinspires.ftc.teamcode.robot.components.Intake;
 
 import java.util.Date;
@@ -32,10 +33,7 @@ public class IntakeOperation extends Operation {
     }
 
     public boolean isComplete() {
-        if (new Date().getTime() - getStartTime().getTime() > 200) {
-            if (type == Type.Consume || type == Type.Expel) {
-                intake.setSpeed(0);
-            }
+        if (new Date().getTime() - getStartTime().getTime() > RobotConfig.SERVO_REQUIRED_TIME) {
             return true;
         }
         return false;
@@ -46,20 +44,18 @@ public class IntakeOperation extends Operation {
         switch (type) {
             case Intake: {
                 intake.setForIntake();
-                intake.setInterruption(true);
-                intake.setSpeed(-1.0);
                 break;
             }
             case Consume: {
                 intake.setForOutput();
                 intake.setInterruption(false);
-                intake.setSpeed(-1.0);
+                intake.setSpeed(0);
                 break;
             }
             case Expel: {
                 intake.setForExpelling();
                 intake.setInterruption(false);
-                intake.setSpeed(1.0);
+                intake.setSpeed(-RobotConfig.INTAKE_SPEED);
                 break;
             }
         }

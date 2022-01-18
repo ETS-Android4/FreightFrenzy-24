@@ -15,6 +15,8 @@ public class OutPutter {
     Servo elbow;
     Servo bucketLid;
     int encoderOffset = 0;
+    boolean inIntakePosition;
+    Object synchronizer = new Object();
 
     public OutPutter(HardwareMap hardwareMap) {
         shoulder = hardwareMap.get(DcMotor.class, RobotConfig.OUT_SHOULDER);
@@ -26,6 +28,18 @@ public class OutPutter {
         bucketLid = hardwareMap.get(Servo.class, RobotConfig.BUCKET_LID);
 
         assumeInitialPosition();
+    }
+
+    public void setInIntakePosition(boolean inIntakePosition) {
+        synchronized (synchronizer) {
+            this.inIntakePosition = inIntakePosition;
+        }
+    }
+
+    public boolean isInIntakePosition() {
+        synchronized (synchronizer) {
+            return this.inIntakePosition;
+        }
     }
 
     public void setShoulderPosition(int position) {
@@ -46,20 +60,6 @@ public class OutPutter {
         this.shoulder.setTargetPosition(RobotConfig.OUTPUT_SHOULDER_INITIAL_POSITION);
         this.shoulder.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         this.shoulder.setPower(RobotConfig.OUT_SHOULDER_SPEED);
-    }
-
-    /**
-     * Get the arm so it is in a position to receive freight
-     */
-    public void assumeIntakePosition() {
-
-        this.open();
-        this.elbow.setPosition(RobotConfig.OUTPUT_ELBOW_INTAKE_POSITION);
-
-        this.shoulder.setTargetPosition(RobotConfig.OUTPUT_SHOULDER_INTAKE_POSITION);
-        this.shoulder.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        this.shoulder.setPower(RobotConfig.OUT_SHOULDER_SPEED);
-
     }
 
     public boolean withinReach() {

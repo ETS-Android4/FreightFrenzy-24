@@ -14,6 +14,8 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.util.RobotLog;
 
 import org.firstinspires.ftc.teamcode.roadrunner.drive.SampleMecanumDrive;
+import org.firstinspires.ftc.teamcode.robot.components.Intake;
+import org.firstinspires.ftc.teamcode.robot.components.OutPutter;
 import org.firstinspires.ftc.teamcode.robot.components.vision.VslamCamera;
 
 import java.util.Objects;
@@ -43,7 +45,7 @@ import static org.firstinspires.ftc.teamcode.roadrunner.drive.DriveConstants.kV;
 @Config
 @Autonomous(group = "drive")
 public class ManualFeedforwardTuner extends LinearOpMode {
-    public static double DISTANCE = 72; // in
+    public static double DISTANCE = 144; // in
 
     private FtcDashboard dashboard = FtcDashboard.getInstance();
 
@@ -72,6 +74,11 @@ public class ManualFeedforwardTuner extends LinearOpMode {
         telemetry = new MultipleTelemetry(telemetry, dashboard.getTelemetry());
 
         drive = new SampleMecanumDrive(hardwareMap, new VslamCamera(hardwareMap));
+
+        OutPutter outPutter = new OutPutter(hardwareMap);
+        outPutter.assumeInitialPosition();
+        Intake intake = new Intake(hardwareMap, outPutter);
+        intake.setForOutput();
 
         mode = Mode.TUNING_MODE;
 

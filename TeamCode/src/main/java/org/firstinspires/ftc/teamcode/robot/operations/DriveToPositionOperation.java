@@ -17,7 +17,6 @@ import java.util.Locale;
 public class DriveToPositionOperation extends FollowTrajectory {
     private Pose2d desiredPose;
     private boolean trajectoryStarted;
-    DriveTrain driveTrain;
 
 
     public boolean isTrajectoryStarted() {

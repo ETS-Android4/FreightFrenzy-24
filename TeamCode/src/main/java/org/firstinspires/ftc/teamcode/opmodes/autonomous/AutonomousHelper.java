@@ -1,6 +1,7 @@
 package org.firstinspires.ftc.teamcode.opmodes.autonomous;
 
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
+import com.qualcomm.robotcore.util.RobotLog;
 
 import org.firstinspires.ftc.teamcode.game.Alliance;
 import org.firstinspires.ftc.teamcode.game.Field;
@@ -18,6 +19,8 @@ public abstract class AutonomousHelper extends OpMode {
     protected Robot robot;
     protected Field field;
 
+    boolean wiggle = false;
+
     ArrayList<State> states = new ArrayList<>();
 
     protected boolean initialOperationsDone;
@@ -25,7 +28,6 @@ public abstract class AutonomousHelper extends OpMode {
     Date initStartTime;
 
     boolean cameraPoseSet = false;
-    boolean aPressed;
     boolean statesAdded = false;
 
     /*
@@ -34,7 +36,6 @@ public abstract class AutonomousHelper extends OpMode {
     public void init(Alliance.Color alliance, Field.StartingPosition startingPosition) {
         initStartTime = new Date();
         cameraPoseSet = false;
-        aPressed = false;
         statesAdded = false;
 
         AutoTransitioner.transitionOnStop(this, "Phoebe: Driver Controlled");
@@ -46,14 +47,21 @@ public abstract class AutonomousHelper extends OpMode {
         match.setAlliance(alliance);
         match.setStartingPosition(startingPosition);
         field = match.getField();
-        field.init(alliance, startingPosition);
-
-        this.robot = match.getRobot();
-        Match.log("Initializing robot");
-        this.robot.init(hardwareMap, telemetry, match);
-        initialOperationsDone = false;
-        Match.log("Robot initialized");
-        telemetry.update();
+        try {
+            //initialize field for the alliance and starting position
+            field.init(alliance, startingPosition);
+            this.robot = match.getRobot();
+            Match.log("Initializing robot");
+            this.robot.init(hardwareMap, telemetry, match);
+            initialOperationsDone = false;
+            Match.log("Robot initialized");
+            telemetry.update();
+        }
+        catch (Throwable e) {
+            RobotLog.logStackTrace(e);
+            telemetry.addData("Status", "Error: " + e.toString());
+            telemetry.update();
+        }
     }
     /*
      * Code to run REPEATEDLY after the driver hits INIT, but before they hit PLAY
@@ -61,21 +69,27 @@ public abstract class AutonomousHelper extends OpMode {
     @Override
     public void init_loop() {
         if (Field.isNotInitialized()) {
-            //RobotLog.i("SilverTitans: Initializing trajectories, please wait");
             telemetry.addData("Status", "Trajectories initializing, please wait. " +
                     (30 - (int)(new Date().getTime() - initStartTime.getTime())/1000));
             telemetry.addData("VSLAM", robot.getVSLAMStatus());
         }
         else if (robot.fullyInitialized()) {
-            match.setBarcodeLevel(robot.getBarCodeLevel());
+            if (gamepad1.a || gamepad2.a) {
+                wiggle = true;
+            }
+            if (gamepad1.x || gamepad2.x) {
+                wiggle = false;
+            }
+            int barCodeLevel = robot.getBarCodeLevel();
+            match.setBarcodeLevel(barCodeLevel);
             if (!robot.havePosition()) {
                 robot.startVSLAM();
-                telemetry.addData("Status", "VSLAM initializing, please wait.");
+                telemetry.addData("Status", (wiggle ? "Will wiggle" : "Won't wiggle") + ", waiting for VSLAM.");
                 telemetry.addData("VSLAM", robot.getVSLAMStatus());
                 telemetry.addData("Barcode", match.getBarcodeLevel());
             }
             else if (!cameraPoseSet) {
-                telemetry.addData("Status", "Setting position, please wait");
+                telemetry.addData("Status", (wiggle ? "Will wiggle" : "Won't wiggle") + ", setting position, please wait");
                 telemetry.addData("VSLAM", robot.getVSLAMStatus());
                 telemetry.addData("Barcode", match.getBarcodeLevel());
                 robot.setInitialPose(field.getStartingPose());
@@ -101,8 +115,9 @@ public abstract class AutonomousHelper extends OpMode {
                     telemetry.addData("Status", positionError);
                     telemetry.addData("VSLAM", robot.getVSLAMStatus());
                     telemetry.addData("Barcode", match.getBarcodeLevel());
+                    robot.setInitialPose(field.getStartingPose());
                 } else {
-                    match.updateTelemetry(telemetry, "Ready, let's go");
+                    match.updateTelemetry(telemetry, (wiggle ? "Will wiggle" : "Won't wiggle") + ", ready");
                 }
             }
         }

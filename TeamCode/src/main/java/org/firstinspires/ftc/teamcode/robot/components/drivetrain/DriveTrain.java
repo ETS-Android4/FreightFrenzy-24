@@ -12,11 +12,13 @@ import org.firstinspires.ftc.teamcode.roadrunner.drive.DriveConstants;
 import org.firstinspires.ftc.teamcode.roadrunner.drive.SampleMecanumDrive;
 import org.firstinspires.ftc.teamcode.robot.components.vision.VslamCamera;
 import org.firstinspires.ftc.teamcode.robot.operations.BearingOperation;
-import org.firstinspires.ftc.teamcode.robot.operations.DistanceOperation;
+import org.firstinspires.ftc.teamcode.robot.operations.DriveForDistanceOperation;
 import org.firstinspires.ftc.teamcode.robot.operations.DriveToPositionOperation;
 import org.firstinspires.ftc.teamcode.robot.operations.FollowTrajectory;
 import org.firstinspires.ftc.teamcode.robot.operations.StrafeLeftForDistanceOperation;
 import org.firstinspires.ftc.teamcode.robot.operations.StrafeLeftForDistanceWithHeadingOperation;
+import org.firstinspires.ftc.teamcode.robot.operations.TurnAntiClockwiseOperation;
+import org.firstinspires.ftc.teamcode.robot.operations.TurnClockwiseOperation;
 
 import java.util.Date;
 import java.util.Locale;
@@ -30,6 +32,28 @@ public class DriveTrain extends SampleMecanumDrive {
     public static final double     P_TURN_COEFFICIENT            = 1;     // Larger is more responsive, but also less stable
     public static final double P_DRIVE_COEFFICIENT = 0.025;     // Larger is more responsive, but also less stable
 
+    int lastLeftFrontEncoderValue;
+    int lastLeftRearEncoderValue;
+    int lastRightFrontEncoderValue;
+    int lastRightRearEncoderValue;
+
+    public int getLastLeftFrontEncoderValue() {
+        return lastLeftFrontEncoderValue;
+    }
+
+    public int getLastLeftRearEncoderValue() {
+        return lastLeftRearEncoderValue;
+    }
+
+    public int getLastRightFrontEncoderValue() {
+        return lastRightFrontEncoderValue;
+    }
+
+    public int getLastRightRearEncoderValue() {
+        return lastRightRearEncoderValue;
+    }
+
+
     public DriveTrain(HardwareMap hardwareMap, VslamCamera camera) {
         super(hardwareMap, camera);
     }
@@ -40,6 +64,7 @@ public class DriveTrain extends SampleMecanumDrive {
      *
      */
     public void setLeftFrontPower(double power) {
+        //super.leftFront.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         super.leftFront.setPower(power);
     }
 
@@ -48,6 +73,7 @@ public class DriveTrain extends SampleMecanumDrive {
      * @param power - the power to set
      */
     public void setRightFrontPower(double power) {
+        //super.rightFront.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         super.rightFront.setPower(power);
     }
 
@@ -57,6 +83,7 @@ public class DriveTrain extends SampleMecanumDrive {
      *
      */
     public void setLeftRearPower(double power) {
+        //super.leftRear.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         super.leftRear.setPower(power);
     }
 
@@ -65,6 +92,7 @@ public class DriveTrain extends SampleMecanumDrive {
      * @param power - the power to set
      */
     public void setRightRearPower(double power) {
+        //super.rightRear.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         super.rightRear.setPower(power);
     }
 
@@ -80,7 +108,7 @@ public class DriveTrain extends SampleMecanumDrive {
             Pose2d currentPose = getPoseEstimate();
             Date start = new Date();
             Thread createTrajectoryThread = new Thread(() -> {
-                Trajectory trajectory = trajectoryBuilder(currentPose)
+                Trajectory trajectory = accurateTrajectoryBuilder(currentPose)
                         .splineToLinearHeading(operation.getDesiredPose(), operation.getDesiredPose().getHeading())
                         .build();
                 Match.log("Starting " + operation.getTitle() + ": " + trajectory.start() + "->" + trajectory.end()
@@ -105,14 +133,14 @@ public class DriveTrain extends SampleMecanumDrive {
         try {
             Pose2d currentPose = getPoseEstimate();
             Pose2d desiredPose =
-                    currentPose.minus(
-                            new Pose2d(0,
-                                    0,
-                                    currentPose.getHeading()-operation.getDesiredBearing()));
+                    currentPose.plus(
+                            new Pose2d(.5,
+                                    .5,
+                                    Math.toRadians(operation.getDesiredBearing())-currentPose.getHeading()));
             Date start = new Date();
             Thread createTrajectoryThread = new Thread(() -> {
                 Trajectory trajectory = trajectoryBuilder(currentPose)
-                        .splineToLinearHeading(desiredPose, desiredPose.getHeading())
+                        .splineToLinearHeading(desiredPose, 0)
                         .build();
                 Match.log("Starting " + operation.getTitle() + ": " + trajectory.start() + "->" + trajectory.end()
                         + " at " + currentPose + ", build took " + (new Date().getTime() - start.getTime()) + " mSecs");
@@ -139,8 +167,9 @@ public class DriveTrain extends SampleMecanumDrive {
      * and then commanding the motors to reach the new desired encoder values
      *
      */
-    public void handleOperation(DistanceOperation operation) {
+    public void handleOperation(DriveForDistanceOperation operation) {
         stop();
+
         int encoderChange = DriveConstants.mmToEncoderTicks(operation.getDistance());
         this.leftFront.setTargetPosition(leftFront.getCurrentPosition() + encoderChange);
         this.rightFront.setTargetPosition(rightFront.getCurrentPosition() + encoderChange);
@@ -156,6 +185,63 @@ public class DriveTrain extends SampleMecanumDrive {
         this.rightFront.setPower(operation.getSpeed());
         this.leftRear.setPower(operation.getSpeed());
         this.rightRear.setPower(operation.getSpeed());
+    }
+
+    /**
+     * Handle operation to turn clockwise for the specified distance
+     * @param operation
+     *
+     * We do this by computing how much each wheel must be rotated to travel the specified distance
+     * and then commanding the motors to reach the new desired encoder values
+     *
+     */
+    public void handleOperation(TurnClockwiseOperation operation) {
+        stop();
+
+        int encoderChange = DriveConstants.mmToEncoderTicks(operation.getDistance());
+        this.rightFront.setTargetPosition(leftFront.getCurrentPosition() + encoderChange/2);
+        this.rightRear.setTargetPosition(rightRear.getCurrentPosition() + encoderChange/2);
+        this.leftFront.setTargetPosition(leftFront.getCurrentPosition() + encoderChange);
+        this.leftRear.setTargetPosition(rightRear.getCurrentPosition() + encoderChange);
+
+        this.rightFront.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        this.rightRear.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        this.leftFront.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        this.leftRear.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+
+        this.rightFront.setPower(operation.getSpeed()/2);
+        this.rightRear.setPower(operation.getSpeed()/2);
+        this.leftFront.setPower(operation.getSpeed());
+        this.leftRear.setPower(operation.getSpeed());
+    }
+
+
+    /**
+     * Handle operation to turn anti-clockwise for the specified distance
+     * @param operation
+     *
+     * We do this by computing how much each wheel must be rotated to travel the specified distance
+     * and then commanding the motors to reach the new desired encoder values
+     *
+     */
+    public void handleOperation(TurnAntiClockwiseOperation operation) {
+        stop();
+
+        int encoderChange = DriveConstants.mmToEncoderTicks(operation.getDistance());
+        this.rightFront.setTargetPosition(leftFront.getCurrentPosition() + encoderChange);
+        this.rightRear.setTargetPosition(rightRear.getCurrentPosition() + encoderChange);
+        this.leftFront.setTargetPosition(leftFront.getCurrentPosition() + encoderChange/2);
+        this.leftRear.setTargetPosition(rightRear.getCurrentPosition() + encoderChange/2);
+
+        this.rightFront.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        this.rightRear.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        this.leftFront.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        this.leftRear.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+
+        this.rightFront.setPower(operation.getSpeed());
+        this.rightRear.setPower(operation.getSpeed());
+        this.leftFront.setPower(operation.getSpeed()/2);
+        this.leftRear.setPower(operation.getSpeed()/2);
     }
 
     /**
@@ -223,10 +309,24 @@ public class DriveTrain extends SampleMecanumDrive {
         return false;
     }
 
+    private boolean allWithinRange(DcMotor... motors) {
+        for (DcMotor motor: motors) {
+            if (Math.abs(motor.getTargetPosition() - motor.getCurrentPosition()) > WITHIN_RANGE) {
+                return false;
+            }
+        }
+        return true;
+    }
     private boolean withinRange()  {
-
         return withinRange(leftFront, rightFront, leftRear, rightRear);
+    }
 
+    public boolean allWithinRange()  {
+        if (allWithinRange(leftFront, rightFront, leftRear, rightRear)) {
+            stop();
+            return true;
+        }
+        return false;
     }
 
     /**
@@ -245,15 +345,31 @@ public class DriveTrain extends SampleMecanumDrive {
     }
 
     public void stop() {
+        lastLeftFrontEncoderValue = leftFront.getCurrentPosition();
+        lastLeftRearEncoderValue = leftRear.getCurrentPosition();
+        lastRightFrontEncoderValue = rightFront.getCurrentPosition();
+        lastRightRearEncoderValue = rightRear.getCurrentPosition();
         //Stop our motors
         leftFront.setPower(0);
         rightFront.setPower(0);
         leftRear.setPower(0);
         rightRear.setPower(0);
+        reset();
+    }
+
+    public void reset() {
+        resetEncoders();
         this.leftFront.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         this.rightFront.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         this.leftRear.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         this.rightRear.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+    }
+
+    private void resetEncoders() {
+        this.leftFront.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        this.rightFront.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        this.leftRear.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        this.rightRear.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
     }
 
     public String getStatus() {
@@ -304,6 +420,7 @@ public class DriveTrain extends SampleMecanumDrive {
             v3 /= scale;
             v4 /= scale;
         }
+
         setLeftFrontPower(v1);
         setRightFrontPower(v2);
         setLeftRearPower(v3);

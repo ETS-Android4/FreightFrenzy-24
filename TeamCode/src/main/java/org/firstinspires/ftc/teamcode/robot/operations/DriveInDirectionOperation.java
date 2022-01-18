@@ -2,6 +2,7 @@ package org.firstinspires.ftc.teamcode.robot.operations;
 
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.teamcode.game.Field;
+import org.firstinspires.ftc.teamcode.game.Match;
 import org.firstinspires.ftc.teamcode.robot.components.drivetrain.DriveTrain;
 
 import java.util.Date;
@@ -11,14 +12,14 @@ import java.util.Locale;
  * Created by Silver Titans on 10/12/17.
  */
 
-public class DistanceInDirectionOperation extends DistanceOperation {
-    private double distance;
-    private double speed;
-    double direction;
-    DriveTrain driveTrain;
+public class DriveInDirectionOperation extends DriveForDistanceOperation {
+    protected double distance;
+    protected double speed;
+    protected double direction;
+    protected DriveTrain driveTrain;
 
-    public DistanceInDirectionOperation(double travelDistance, double heading,
-                                        double speed, DriveTrain driveTrain, String title) {
+    public DriveInDirectionOperation(double travelDistance, double heading,
+                                     double speed, DriveTrain driveTrain, String title) {
         super(travelDistance, travelDistance, driveTrain, title);
         this.distance = travelDistance;
         this.speed = speed;
@@ -28,7 +29,7 @@ public class DistanceInDirectionOperation extends DistanceOperation {
     }
 
     public String toString() {
-        return String.format(Locale.getDefault(), "StraightLine: %.2f(%.2f\")@%.2f --%s",
+        return String.format(Locale.getDefault(), "DriveInDirection: %.2f(%.2f\")@%.2f --%s",
                 this.distance, (this.distance / Field.MM_PER_INCH), this.direction,
                 this.title);
     }
@@ -36,7 +37,6 @@ public class DistanceInDirectionOperation extends DistanceOperation {
     public boolean isComplete() {
         double currentBearing = Math.toDegrees(driveTrain.getExternalHeading());
         if (driveTrain.driveTrainWithinRange()) {
-            driveTrain.stop();
             return true;
         } else {
             // adjust relative speed based on heading error.
@@ -56,6 +56,8 @@ public class DistanceInDirectionOperation extends DistanceOperation {
                 leftSpeed /= max;
                 rightSpeed /= max;
             }
+
+            Match.log(String.format(Locale.getDefault(), "Setting power LF:%.2f,LR:%.2f,RF:%.2f,RR%.2f", leftSpeed, leftSpeed, rightSpeed, rightSpeed));
 
             driveTrain.setLeftFrontPower(leftSpeed);
             driveTrain.setLeftRearPower(leftSpeed);
