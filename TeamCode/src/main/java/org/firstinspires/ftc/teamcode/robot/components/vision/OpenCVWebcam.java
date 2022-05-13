@@ -128,8 +128,8 @@ public class OpenCVWebcam {
                 Match.log("Unable to open " + RobotConfig.WEBCAM_ID);
             }
         });
+        //FtcDashboard.getInstance().startCameraStream(webcam, 10);
     }
-
 
     /**
      * Return the road runner pose of the object seen relative to the robot.
@@ -299,7 +299,7 @@ public class OpenCVWebcam {
         public Mat processFrame(Mat input) {
             synchronized (synchronizer) {
                 List<MatOfPoint> contours = contourDetector.process(input);
-                Imgproc.drawContours(input, contours, -1, GREEN, 1);
+                Imgproc.drawContours(input, contours, -1, GREEN, 5);
                 MatOfPoint largestContour = contourDetector.getLargestContour();
                 if (largestContour != null) {
                     List<MatOfPoint> largestContours = new ArrayList<>();

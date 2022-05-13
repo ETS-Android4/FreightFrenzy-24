@@ -19,8 +19,6 @@ public abstract class AutonomousHelper extends OpMode {
     protected Robot robot;
     protected Field field;
 
-    boolean wiggle = false;
-
     ArrayList<State> states = new ArrayList<>();
 
     protected boolean initialOperationsDone;
@@ -64,7 +62,7 @@ public abstract class AutonomousHelper extends OpMode {
         }
     }
     /*
-     * Code to run REPEATEDLY after the driver hits INIT, but before they hit PLAY
+     * Code to run repeatedly after the driver hits INIT, but before they hit PLAY
      */
     @Override
     public void init_loop() {
@@ -74,22 +72,16 @@ public abstract class AutonomousHelper extends OpMode {
             telemetry.addData("VSLAM", robot.getVSLAMStatus());
         }
         else if (robot.fullyInitialized()) {
-            if (gamepad1.a || gamepad2.a) {
-                wiggle = true;
-            }
-            if (gamepad1.x || gamepad2.x) {
-                wiggle = false;
-            }
             int barCodeLevel = robot.getBarCodeLevel();
             match.setBarcodeLevel(barCodeLevel);
             if (!robot.havePosition()) {
-                robot.startVSLAM();
-                telemetry.addData("Status", (wiggle ? "Will wiggle" : "Won't wiggle") + ", waiting for VSLAM.");
+                //robot.startVSLAM();
+                telemetry.addData("Status", "Waiting for VSLAM.");
                 telemetry.addData("VSLAM", robot.getVSLAMStatus());
                 telemetry.addData("Barcode", match.getBarcodeLevel());
             }
             else if (!cameraPoseSet) {
-                telemetry.addData("Status", (wiggle ? "Will wiggle" : "Won't wiggle") + ", setting position, please wait");
+                telemetry.addData("Status", "Setting position, please wait");
                 telemetry.addData("VSLAM", robot.getVSLAMStatus());
                 telemetry.addData("Barcode", match.getBarcodeLevel());
                 robot.setInitialPose(field.getStartingPose());
@@ -104,7 +96,7 @@ public abstract class AutonomousHelper extends OpMode {
                         || (Math.abs(yError) > RobotConfig.ALLOWED_POSITIONAL_ERROR
                         || (Math.abs(bearingError) > RobotConfig.ALLOWED_BEARING_ERROR))) {
                     String positionError = String.format(Locale.getDefault(),
-                            "Position Error, restart app:%s v/s %s, xErr:%.2f, yErr:%.2f, hErr:%.2fvs%.2f=%.2f",
+                            "Position Error, restart app:%s v %s, xErr:%.2f, yErr:%.2f, hErr:%.2fv%.2f=%.2f",
                             field.getStartingPose(),
                             robot.getPosition(),
                             xError,
@@ -115,9 +107,9 @@ public abstract class AutonomousHelper extends OpMode {
                     telemetry.addData("Status", positionError);
                     telemetry.addData("VSLAM", robot.getVSLAMStatus());
                     telemetry.addData("Barcode", match.getBarcodeLevel());
-                    robot.setInitialPose(field.getStartingPose());
+                    //robot.setInitialPose(field.getStartingPose());
                 } else {
-                    match.updateTelemetry(telemetry, (wiggle ? "Will wiggle" : "Won't wiggle") + ", ready");
+                    match.updateTelemetry(telemetry, "Ready");
                 }
             }
         }

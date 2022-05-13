@@ -21,11 +21,13 @@
 
 package org.firstinspires.ftc.teamcode.opmodes.drivercontrolled;
 
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
 import org.firstinspires.ftc.teamcode.robot.components.vision.OpenCVWebcam;
 
 @TeleOp(name = "Phoebe: Cargo Finder", group = "Phoebe")
+@Disabled
 
 public class CargoFinderTeleOp extends ElementFinderTeleOp {
     @Override

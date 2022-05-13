@@ -17,6 +17,7 @@ import org.firstinspires.ftc.teamcode.robot.operations.WaitOperation;
 public abstract class NearWarehouseAutonomousV2 extends AutonomousHelper {
     public static final double FIRST_ENTRY_DISTANCE = 1.5*Field.TILE_WIDTH;
     public static final double SECOND_ENTRY_DISTANCE = 1.5*Field.TILE_WIDTH;
+    public static final double ANGLE_OF_APPROACH = 20;
     @Override
     public void start() {
         super.start();
@@ -61,10 +62,10 @@ public abstract class NearWarehouseAutonomousV2 extends AutonomousHelper {
         state.addPrimaryOperation(new FollowTrajectory(field.getFirstTimeReachWallTrajectory(), robot.getDriveTrain(), "Reach wall first time"));
         //state.addPrimaryOperation(new FollowTrajectory(field.getFirstTimeNavigateTrajectory(), robot.getDriveTrain(), "Reach warehouse first time"));
         state.addPrimaryOperation(new DriveInDirectionOperation(FIRST_ENTRY_DISTANCE, 0, RobotConfig.REGULAR_SPEED, robot.getDriveTrain(), "Enter warehouse first time"));
-        state.addPrimaryOperation(new BearingOperation(Match.getInstance().getAlliance() == Alliance.Color.RED ? 30 : -30,  robot.getDriveTrain(), "Point away"));
+        state.addPrimaryOperation(new BearingOperation(Match.getInstance().getAlliance() == Alliance.Color.RED ? ANGLE_OF_APPROACH : -ANGLE_OF_APPROACH,  robot.getDriveTrain(), "Point away"));
         state.addPrimaryOperation(new DriveUntilFreightOperation(Field.TILE_WIDTH, 0, RobotConfig.SUPER_CAUTIOUS_SPEED, robot.getDriveTrain(), robot.getIntake(), "Get freight"));
 
-        state.addSecondaryOperation(new WaitOperation(250, "Wait quarter sec before retracting arm"));
+        state.addSecondaryOperation(new WaitOperation(250, "Wait before retracting arm to avoid hitting hub"));
         state.addSecondaryOperation(new OutputOperation(robot.getOutPutter(), robot.getIntake(), OutputOperation.Type.Level_Intake, "Intake position"));
         state.addSecondaryOperation(new IntakeOperation(robot.getIntake(), IntakeOperation.Type.Intake, "Intake On"));
         states.add(state);
@@ -73,8 +74,7 @@ public abstract class NearWarehouseAutonomousV2 extends AutonomousHelper {
     private void deliverSecondFreight() {
         State state;
         state = new State("Deliver first freight from warehouse");
-        //state.addPrimaryOperation(new FollowTrajectory(field.getReturnToWallTrajectory(), robot.getDriveTrain(), "Reach wall from warehouse"));
-        state.addPrimaryOperation(new DriveForDynamicDistanceOperation(true, Match.getInstance().getAlliance() == Alliance.Color.RED ? 45 : -45, RobotConfig.REGULAR_SPEED, robot.getDriveTrain(), "Exit warehouse first time"));
+        state.addPrimaryOperation(new DriveForDynamicDistanceOperation(true, Match.getInstance().getAlliance() == Alliance.Color.RED ? ANGLE_OF_APPROACH : -ANGLE_OF_APPROACH, RobotConfig.REGULAR_SPEED, robot.getDriveTrain(), "Exit warehouse first time"));
         state.addPrimaryOperation(new BearingOperation(0, robot.getDriveTrain(), "Realign"));
         state.addPrimaryOperation(new DriveInDirectionOperation(-FIRST_ENTRY_DISTANCE, 0, RobotConfig.REGULAR_SPEED, robot.getDriveTrain(), "Complete warehouse exit"));
         state.addPrimaryOperation(new FollowTrajectory(field.getReturnToHubTrajectory(), robot.getDriveTrain(), "Reach hub second time"));

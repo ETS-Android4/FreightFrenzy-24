@@ -49,15 +49,17 @@ public class Intake {
                     catch (Throwable e) {
                         Match.log("Error: " + e.toString());
                     }
-                    if (red > 140) {
+                    if (red > 150) {
                         Match.log("Interrupted for " + red);
                         setSpeed(0);
                         setHaveFreight(true);
                         if (outPutter.isInIntakePosition()) {
                             servo.setPosition(RobotConfig.INTAKE_RAISED_POSITION);
+                            Match.getInstance().setLed(RevBlinkinLedDriver.BlinkinPattern.GREEN);
                         }
                         else {
                             servo.setPosition(RobotConfig.INTAKE_CONSUME_POSITION);
+                            Match.getInstance().setLed(RevBlinkinLedDriver.BlinkinPattern.YELLOW);
                         }
                         setInterruption(false);
                     }
@@ -89,6 +91,7 @@ public class Intake {
     }
 
     public void setSpeed(double speed) {
+        motor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         this.motor.setPower(Math.max((Math.min(speed, RobotConfig.MAX_IN_SPEED)), -RobotConfig.MAX_IN_SPEED));
     }
 
@@ -100,6 +103,10 @@ public class Intake {
         this.setInterruption(true);
     }
 
+    public void lowerIntake() {
+        this.servo.setPosition(RobotConfig.INTAKE_LOWERED_POSITION);
+    }
+
     public void setForOutput() {
         this.servo.setPosition(RobotConfig.INTAKE_RAISED_POSITION);
     }
@@ -107,11 +114,12 @@ public class Intake {
     public void setForExpelling() {
         this.servo.setPosition(RobotConfig.INTAKE_LOWERED_POSITION);
     }
-    public void raiseIntake() {
+
+    public void incrementallyRaiseIntake() {
         this.servo.setPosition(servo.getPosition() - RobotConfig.INTAKE_SERVO_INCREMENT);
     }
 
-    public void lowerIntake() {
+    public void incrementallyLowerIntake() {
         this.servo.setPosition(servo.getPosition() + RobotConfig.INTAKE_SERVO_INCREMENT);
     }
 
@@ -128,12 +136,6 @@ public class Intake {
     public void setHaveFreight(boolean haveFreight) {
         synchronized (synchronizer) {
             this.haveFreight = haveFreight;
-            if (haveFreight) {
-                Match.getInstance().setLed(RevBlinkinLedDriver.BlinkinPattern.GREEN);
-            }
-            else {
-                Match.getInstance().setLed(RevBlinkinLedDriver.BlinkinPattern.WHITE);
-            }
         }
     }
 

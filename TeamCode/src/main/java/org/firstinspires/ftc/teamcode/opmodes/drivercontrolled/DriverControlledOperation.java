@@ -37,7 +37,6 @@ import com.qualcomm.robotcore.util.RobotLog;
 import org.firstinspires.ftc.teamcode.game.Alliance;
 import org.firstinspires.ftc.teamcode.game.Match;
 import org.firstinspires.ftc.teamcode.robot.Robot;
-import org.firstinspires.ftc.teamcode.robot.operations.OutputOperation;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
@@ -79,7 +78,7 @@ public class DriverControlledOperation extends OpMode {
         else {
             robot.setPattern(RevBlinkinLedDriver.BlinkinPattern.SHOT_BLUE);
         }
-        robot.startVSLAM();
+        //robot.startVSLAM();
 
         try {
             robot.setState("Initialized");
@@ -111,7 +110,7 @@ public class DriverControlledOperation extends OpMode {
     public void start() {
         match.setTeleopStartTime(new Date());
         //get into intake mode
-        robot.queueSecondaryOperation(new OutputOperation(robot.getOutPutter(), robot.getIntake(), OutputOperation.Type.Level_Intake, "Intake"));
+        //robot.queueSecondaryOperation(new OutputOperation(robot.getOutPutter(), robot.getIntake(), OutputOperation.Type.Level_Intake, "Intake"));
     }
 
     /*

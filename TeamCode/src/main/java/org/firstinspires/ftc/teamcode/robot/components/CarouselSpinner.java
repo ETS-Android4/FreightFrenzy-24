@@ -9,13 +9,22 @@ import org.firstinspires.ftc.teamcode.robot.RobotConfig;
 import java.util.Locale;
 
 public class CarouselSpinner {
-    DcMotor motor;
+    //variable called motor
+    private DcMotor motor;
+
+    //constructor that requires HardwareMap to be passed in
     public CarouselSpinner(HardwareMap hardwareMap) {
         motor = hardwareMap.get(DcMotor.class, RobotConfig.CAROUSEL_MOTOR);
     }
 
+    /**
+     * Method to set the speed of the carousel spinner motor
+     * @param speed
+     */
     public void setSpeed(double speed) {
-        double speedToSet = Math.max((Math.min(speed, RobotConfig.MAX_CAROUSEL_SPEED)), -RobotConfig.MAX_CAROUSEL_SPEED);
+        double speedToSet =
+                Math.max((Math.min(speed, RobotConfig.MAX_CAROUSEL_SPEED)),
+                        -RobotConfig.MAX_CAROUSEL_SPEED);
         motor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         this.motor.setPower(speedToSet);
         if (speedToSet != 0) {

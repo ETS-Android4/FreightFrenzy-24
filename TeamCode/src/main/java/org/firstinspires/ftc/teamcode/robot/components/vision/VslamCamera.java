@@ -19,7 +19,7 @@ import java.util.function.Consumer;
 
 /**
  * This class implements our VSLAM camera. It holds on to an instance of the camera in a
- * static class member. It also maintains other static variables like the current position,
+ * static class member. It also maintains other variables like the current position,
  * velocity etc.
  *
  * One should call start and stop on this class to start and stop the camera. The constructor
@@ -46,10 +46,12 @@ public class VslamCamera implements Localizer, Consumer<T265Camera.CameraUpdate>
 
     //we maintain a static camera instance
     private static T265Camera t265Camera = null;
+    //and a static synchronization object
+    private static final Object synchronizationObject = new Object();
+
     private Pose2d currentPose = new Pose2d();
-    private static T265Camera.CameraUpdate lastCameraUpdate;
+    private T265Camera.CameraUpdate lastCameraUpdate;
     private Pose2d pose2dVelocity = new Pose2d();
-    private final Object synchronizationObject = new Object();
     private volatile boolean isInitialized = false;
 
     /**
@@ -103,7 +105,9 @@ public class VslamCamera implements Localizer, Consumer<T265Camera.CameraUpdate>
     @NotNull
     @Override
     public Pose2d getPoseEstimate() {
-        return currentPose;
+        synchronized (synchronizationObject) {
+            return currentPose;
+        }
     }
 
     /**
@@ -126,18 +130,9 @@ public class VslamCamera implements Localizer, Consumer<T265Camera.CameraUpdate>
 
     @Override
     public Pose2d getPoseVelocity() {
-        return pose2dVelocity;
-    }
-
-    public void stop() {
-        if (t265Camera.isStarted()) {
-            Match.log("Stopping T265 camera");
-            t265Camera.stop();
+        synchronized (synchronizationObject) {
+            return pose2dVelocity;
         }
-        else {
-            Match.log("T265 Camera was already stopped");
-        }
-        lastCameraUpdate = null;
     }
 
     /**
@@ -146,15 +141,17 @@ public class VslamCamera implements Localizer, Consumer<T265Camera.CameraUpdate>
      */
     public void start() {
         synchronized (synchronizationObject) {
-            try {//start our camera
+            lastCameraUpdate = null;
+            try {//start our camera only if it is not already initialized
                 if (!isInitialized) {
+                    //if the static camera was already started, stop it first
                     if (t265Camera.isStarted()) {
                         t265Camera.stop();
                         Match.log("Stopped T265 camera");
                     }
+                    //start the camera so we can start receiving updates
                     t265Camera.start(this);
                     Match.log("Started T265 camera");
-                    lastCameraUpdate = null;
                 }
             }
             catch(Throwable e){
@@ -162,7 +159,6 @@ public class VslamCamera implements Localizer, Consumer<T265Camera.CameraUpdate>
             }
         }
     }
-
 
     /**
      * Accept the asynchronous update sent by the camera.
@@ -177,7 +173,8 @@ public class VslamCamera implements Localizer, Consumer<T265Camera.CameraUpdate>
             try {
                 lastCameraUpdate = cameraUpdate;
                 //only update our position if the confidence level is not low
-                if (cameraUpdate.confidence != T265Camera.PoseConfidence.Low) {
+                if (cameraUpdate.confidence != T265Camera.PoseConfidence.Low
+                    && cameraUpdate.confidence != T265Camera.PoseConfidence.Failed) {
                     pose2dVelocity = new Pose2d(
                             cameraUpdate.velocity.vxMetersPerSecond / Field.M_PER_INCH,
                             cameraUpdate.velocity.vyMetersPerSecond / Field.M_PER_INCH,
@@ -210,10 +207,14 @@ public class VslamCamera implements Localizer, Consumer<T265Camera.CameraUpdate>
 
 
     public boolean havePosition() {
-        return lastCameraUpdate != null;
+        synchronized (synchronizationObject) {
+            return lastCameraUpdate != null;
+        }
     }
 
     public T265Camera.PoseConfidence getPoseConfidence() {
-        return lastCameraUpdate.confidence;
+        synchronized (synchronizationObject) {
+            return lastCameraUpdate.confidence;
+        }
     }
 }

@@ -1,5 +1,7 @@
 package org.firstinspires.ftc.teamcode.robot.operations;
 
+import com.qualcomm.hardware.rev.RevBlinkinLedDriver;
+
 import org.firstinspires.ftc.teamcode.game.Match;
 import org.firstinspires.ftc.teamcode.robot.RobotConfig;
 import org.firstinspires.ftc.teamcode.robot.components.Intake;
@@ -7,6 +9,8 @@ import org.firstinspires.ftc.teamcode.robot.components.OutPutter;
 
 import java.util.Date;
 import java.util.Locale;
+
+import static org.firstinspires.ftc.teamcode.robot.operations.OutputOperation.Type.Level_Intake;
 
 /**
  * Created by Silver Titans on 10/12/17.
@@ -57,13 +61,14 @@ public class OutputOperation extends Operation {
                 elbowPositionSetTime = new Date();
             }
             if (currentTime - elbowPositionSetTime.getTime() > RobotConfig.SERVO_REQUIRED_TIME) {
-                if (type == Type.Level_Intake) {
+                if (type == Level_Intake) {
                     outputter.open();
                     outputter.setInIntakePosition(true);
                 }
                 else if (type == Type.Level_Pickup) {
                     outputter.open();
                 }
+                Match.getInstance().setLed(RevBlinkinLedDriver.BlinkinPattern.WHITE);
                 return true;
             }
         }
@@ -169,6 +174,10 @@ public class OutputOperation extends Operation {
                 outputter.setElbowPosition(RobotConfig.OUTPUT_ELBOW_INITIAL_POSITION);
                 //set the desired shoulder positions
                 setShoulderPosition();
+                //lower intake so bucket can fit in the intake position
+                if (type == Level_Intake) {
+                    intake.lowerIntake();
+                }
                 break;
             }
             case Open: {

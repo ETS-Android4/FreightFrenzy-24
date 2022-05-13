@@ -63,7 +63,6 @@ import org.firstinspires.ftc.teamcode.robot.operations.OutputOperation;
  *          If right bumper is pressed: open to capping position
  *          else open bucket
  *         Right trigger - close bucket
-
  *
  *         x - if left bumper is pressed, tell outputter that this is the correct intake level for intake
  *             otherwise
@@ -268,7 +267,7 @@ public class Robot {
 
     public void handleDriveTrain(Gamepad gamePad1) {
         if (this.primaryOperationsCompleted()) {
-            double multiplier = gamePad1.right_trigger > 0.1 ? 1.0 : .6;
+            double multiplier = gamePad1.right_trigger > 0.1 ? .3 : .6;
             double x = Math.pow(gamePad1.left_stick_x, 3) * multiplier; // Get left joystick's x-axis value.
             double y = -Math.pow(gamePad1.left_stick_y, 3) * multiplier; // Get left joystick's y-axis value.
 
@@ -292,10 +291,10 @@ public class Robot {
             }
         }
         else if (gamePad1.dpad_up) {
-            intake.raiseIntake();
+            intake.incrementallyRaiseIntake();
         }
         else if (gamePad1.dpad_down) {
-            intake.lowerIntake();
+            intake.incrementallyLowerIntake();
         }
     }
 
@@ -305,11 +304,14 @@ public class Robot {
         game pads a, b, y control bucket levels for hub
         if gamepad2 left bumper is pressed, the levels are not set, the outputter is told that the new
         position for the specified level should be reset
+
+        We don't honor a and b buttons if start is also pressed as this might be when drivers are
+        trying to register the controllers
          */
-            if (gamePad1.a) {
+            if (gamePad1.a && !gamePad1.start) {
                 queueSecondaryOperation(new OutputOperation(outputter, intake, OutputOperation.Type.Level_Pickup, "Pickup level"));
             }
-            if (gamePad2.a) {
+            if (gamePad2.a && !gamePad2.start) {
                 if (gamePad2.left_bumper) {
                     outputter.setEncoderOffset(OutputOperation.Type.Level_Low);
                 }
@@ -317,13 +319,16 @@ public class Robot {
                     queueSecondaryOperation(new OutputOperation(outputter, intake, OutputOperation.Type.Level_Low, "Low level"));
                 }
             }
-            if (gamePad1.b || gamePad2.b) {
+            if (gamePad2.b && !gamePad2.start) {
                 if (gamePad2.left_bumper) {
                     outputter.setEncoderOffset(OutputOperation.Type.Level_Middle);
                 }
                 else {
                     queueSecondaryOperation(new OutputOperation(outputter, intake, OutputOperation.Type.Level_Middle, "Middle level"));
                 }
+            }
+            if (gamePad1.b && !gamePad1.start) {
+                queueSecondaryOperation(new OutputOperation(outputter, intake, OutputOperation.Type.Vertical, "Vertical"));
             }
             if (gamePad1.y) {
                 queueSecondaryOperation(new OutputOperation(outputter, intake, OutputOperation.Type.Level_Llama, "Llama level"));
@@ -401,16 +406,10 @@ public class Robot {
             this.driveTrain.ensureWheelDirection();
             this.driveTrain.reset();
         }
-        startVSLAM();
-        //this.webcam.start();
     }
 
     public Pose2d getPose() {
         return this.vslamCamera.getPoseEstimate();
-    }
-
-    public void startVSLAM() {
-        this.vslamCamera.start();
     }
 
     public OpenCVWebcam getWebcam() {

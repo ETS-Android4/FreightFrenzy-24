@@ -12,12 +12,6 @@ import static org.firstinspires.ftc.teamcode.roadrunner.drive.SampleMecanumDrive
 /**
  * Created by Silver Titans on 9/16/17.
  */
-
-/*
-       X: -.5
-       y: -51
-       theta: 61.7
- */
 public class Field {
     public static final float MM_PER_INCH = 25.4f;
     public static final double M_PER_INCH = MM_PER_INCH/1000;

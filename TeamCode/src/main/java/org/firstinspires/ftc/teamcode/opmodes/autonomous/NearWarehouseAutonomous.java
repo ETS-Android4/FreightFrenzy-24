@@ -2,6 +2,7 @@ package org.firstinspires.ftc.teamcode.opmodes.autonomous;
 
 import org.firstinspires.ftc.teamcode.game.Field;
 import org.firstinspires.ftc.teamcode.robot.RobotConfig;
+import org.firstinspires.ftc.teamcode.robot.operations.BearingOperation;
 import org.firstinspires.ftc.teamcode.robot.operations.DriveInDirectionOperation;
 import org.firstinspires.ftc.teamcode.robot.operations.FollowTrajectory;
 import org.firstinspires.ftc.teamcode.robot.operations.IntakeOperation;
@@ -10,7 +11,6 @@ import org.firstinspires.ftc.teamcode.robot.operations.State;
 import org.firstinspires.ftc.teamcode.robot.operations.WaitOperation;
 
 public abstract class NearWarehouseAutonomous extends AutonomousHelper {
-    public static final double WIGGLE_ANGLE = 15;
     @Override
     public void start() {
         super.start();
@@ -41,7 +41,11 @@ public abstract class NearWarehouseAutonomous extends AutonomousHelper {
 
         state.addPrimaryOperation(new FollowTrajectory(field.getFirstTimeReachWallTrajectory(), robot.getDriveTrain(), "Reach wall first time"));
         //state.addPrimaryOperation(new FollowTrajectory(field.getFirstTimeNavigateTrajectory(), robot.getDriveTrain(), "Reach warehouse first time"));
-        state.addPrimaryOperation(new DriveInDirectionOperation(1.6* Field.TILE_WIDTH, 0, RobotConfig.REGULAR_SPEED, robot.getDriveTrain(), "Enter warehouse first time"));
+        state.addPrimaryOperation(new DriveInDirectionOperation(1* Field.TILE_WIDTH, 0, RobotConfig.REGULAR_SPEED, robot.getDriveTrain(), "Enter warehouse first time"));
+
+        state.addPrimaryOperation(new BearingOperation(15, robot.getDriveTrain(), "Tilt in warehouse"));
+        state.addPrimaryOperation(new DriveInDirectionOperation(200, 15, RobotConfig.REGULAR_SPEED, robot.getDriveTrain(), "Move forward a bit"));
+
         state.addSecondaryOperation(new WaitOperation(250, "Wait quarter sec before retracting arm"));
         state.addSecondaryOperation(new OutputOperation(robot.getOutPutter(), robot.getIntake(), OutputOperation.Type.Level_Intake, "Intake position"));
         state.addTertiaryOperation(new IntakeOperation(robot.getIntake(), IntakeOperation.Type.Intake, "Intake On"));
@@ -49,18 +53,20 @@ public abstract class NearWarehouseAutonomous extends AutonomousHelper {
 
         state = new State("Deliver first freight from warehouse");
         //state.addPrimaryOperation(new FollowTrajectory(field.getReturnToWallTrajectory(), robot.getDriveTrain(), "Reach wall from warehouse"));
-        state.addPrimaryOperation(new DriveInDirectionOperation(-1.6* Field.TILE_WIDTH, 0, RobotConfig.REGULAR_SPEED, robot.getDriveTrain(), "Exit warehouse first time"));
+        state.addPrimaryOperation(new DriveInDirectionOperation(-200, 15, RobotConfig.REGULAR_SPEED, robot.getDriveTrain(), "Move backwards a bit"));
+        state.addPrimaryOperation(new BearingOperation(0, robot.getDriveTrain(), "Realign in warehouse"));
+        state.addPrimaryOperation(new DriveInDirectionOperation(-1* Field.TILE_WIDTH, 0, RobotConfig.REGULAR_SPEED, robot.getDriveTrain(), "Exit warehouse first time"));
         state.addPrimaryOperation(new FollowTrajectory(field.getReturnToHubTrajectory(), robot.getDriveTrain(), "Reach hub second time"));
         state.addPrimaryOperation(new OutputOperation(robot.getOutPutter(), robot.getIntake(), OutputOperation.Type.Open, "Deliver"));
 
-        state.addSecondaryOperation(new WaitOperation(1500, "Wait half a sec before raising arm"));
+        state.addSecondaryOperation(new WaitOperation(1500, "Wait 1.5 sec before raising arm"));
         state.addSecondaryOperation(new OutputOperation(robot.getOutPutter(), robot.getIntake(), OutputOperation.Type.Level_High, "Level High"));
         states.add(state);
 
         state = new State("Get to warehouse second time");
         state.addPrimaryOperation(new FollowTrajectory(field.getSubsequentTimeReachWallTrajectory(), robot.getDriveTrain(), "Reach wall second time"));
         //state.addPrimaryOperation(new FollowTrajectory(field.getSubsequentNavigateTrajectory(), robot.getDriveTrain(), "Reach warehouse second time"));
-        state.addPrimaryOperation(new DriveInDirectionOperation(1.7* Field.TILE_WIDTH, 0, RobotConfig.REGULAR_SPEED, robot.getDriveTrain(), "Enter warehouse second time"));
+        state.addPrimaryOperation(new DriveInDirectionOperation(1.9* Field.TILE_WIDTH, 0, RobotConfig.REGULAR_SPEED, robot.getDriveTrain(), "Enter warehouse second time"));
 
         state.addSecondaryOperation(new WaitOperation(250, "Wait quarter sec before retracting arm"));
         state.addSecondaryOperation(new OutputOperation(robot.getOutPutter(), robot.getIntake(), OutputOperation.Type.Level_Intake, "Intake position"));
